@@ -1,0 +1,4 @@
+{
+  "verbose": true,
+  "ignore": ["*.spec.js", "__tests__/*", "*.test.js", "public/*", "var/*", "node_modules/*", "rest/*"]
+}

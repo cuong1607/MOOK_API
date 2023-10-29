@@ -1,0 +1,14 @@
+node_modules
+var/*
+public/templates/*
+public/upload/*
+public/resources/*
+public/samples/*
+ecosystem.config.js
+.idea/*
+.env
+
+.DS_Store
+.flaskenv*
+!.env.project
+!.env.vault
