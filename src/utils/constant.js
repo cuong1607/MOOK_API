@@ -45,6 +45,7 @@ module.exports = Object.freeze({
     DB_ERROR: Error.create({ code: 2, message: 'Truy vấn lỗi' }),
     ACCOUNT_EXIST: Error.create({ code: 5, message: 'Tài khoản đã tồn tại' }),
     PHONE_EXIST: Error.create({ code: 5, message: 'Số điện thoại đã tồn tại' }),
+    CODE_EXIST: Error.create({ code: 5, message: 'Mã code danh mục đã tồn tại' }),
     LOGIN_FAIL: Error.create({ code: 6, message: 'Số điện thoại không tồn tại' }),
     PASSWORD_FAIL: Error.create({ code: 6, message: 'Sai mật khẩu' }),
     NOT_FOUND: Error.create({ code: 11, message: 'Dữ liệu không tồn tại ' }),
@@ -174,5 +175,13 @@ module.exports = Object.freeze({
   GENDER: {
     WOMAN: 0,
     MAN: 1,
+  },
+  ORDER_STATUS: {
+    PENDING: 1, // chờ xác nhận
+    CONFIRMED: 2, // đã xác nhận
+    SHIP: 3, // đang thực hiện
+    SUCCESS: 4, // hoàn thành
+    CANCELED: 5, // huỷ
+    DENY: 6, // từ chối
   },
 });

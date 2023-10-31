@@ -13,6 +13,7 @@ const supportMiddleware = [
 /* GET users listing. */
 router
   .get('/', supportMiddleware, wrapHandlerWithJSONResponse(userController.getAllUser))
+  .get('/:id', supportMiddleware, wrapHandlerWithJSONResponse(userController.getDetailUser))
   .post('/', supportMiddleware, wrapHandlerWithJSONResponse(userController.createUser))
   .patch('/:id', supportMiddleware, wrapHandlerWithJSONResponse(userController.updateUser))
   .delete('/:id', supportMiddleware, wrapHandlerWithJSONResponse(userController.deleteUser));

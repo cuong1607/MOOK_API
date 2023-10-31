@@ -49,7 +49,7 @@ function wrapHandlerWithJSONResponse(handler) {
     } catch (error) {
       // next(error);
       debug.error(error);
-      res.json(wrapErrorJSON(error));
+      //res.json(wrapErrorJSON(error));
       next(error);
     }
   };

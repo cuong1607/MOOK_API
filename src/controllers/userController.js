@@ -12,8 +12,19 @@ async function getAllUser(req, res) {
     where: { is_active: IS_ACTIVE.ACTIVE, id: { [Op.ne]: auth.id } },
     limit,
     offset,
+    order: [['id', 'DESC']],
   });
   return { data: rows, paging: { page, count, limit } };
+}
+
+async function getDetailUser(req, res) {
+  const { id } = req.params;
+  const whereCondition = { is_active: IS_ACTIVE.ACTIVE, id };
+
+  const detail = await user.findOne({
+    where: whereCondition,
+  });
+  return detail;
 }
 
 async function createUser(req, res) {
@@ -93,4 +104,5 @@ module.exports = {
   createUser,
   updateUser,
   deleteUser,
+  getDetailUser,
 };

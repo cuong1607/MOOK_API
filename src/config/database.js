@@ -25,7 +25,7 @@ const sequelize = new Sequelize(env.database, env.user, env.password, {
     idle: 5000,
   },
   define: {
-    hooks: true,
+    hooks: false,
   },
 });
 

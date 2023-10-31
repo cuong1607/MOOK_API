@@ -11,6 +11,9 @@ const compression = require('compression');
 var indexRouter = require('./src/routes/index');
 var usersRouter = require('./src/routes/usersRoutes');
 var userSessionRouter = require('@routes/usersSessionRoutes');
+const categoryRouter = require('@routes/categoryRoutes');
+const productRouter = require('@routes/productRoutes');
+const orderRouter = require('@routes/orderRoutes');
 const db = require('./src/models/index');
 var app = express();
 
@@ -33,7 +36,9 @@ app.use(cookieParser());
 app.use('/', indexRouter);
 app.use('/user', usersRouter);
 app.use('/user-session', userSessionRouter);
-
+app.use('/category', categoryRouter);
+app.use('/product', productRouter);
+app.use('/order', orderRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
@@ -64,13 +69,7 @@ const response = require('@src/common/response');
 app.use(function (err, req, res, next) {
   res.status((err?.isUseStatus && err.status) || 200);
   if (err instanceof sequelize.BaseError) {
-    return res.json(
-      response.error(
-        new AppError(apiCode.DB_ERROR.code, 'Kết nối bị gián đoạn, vui lòng thử lại!'),
-        null,
-        app.get('env') === 'development' ? err.stack : '',
-      ),
-    );
+    return res.json(response.error(err, null, app.get('env') === 'development' ? err.stack : ''));
   }
   // render the error page
   res.json(response.error(err, null, app.get('env') === 'development' ? err.stack : ''));

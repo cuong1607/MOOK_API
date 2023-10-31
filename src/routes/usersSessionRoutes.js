@@ -4,7 +4,7 @@ const middleware = require('@middlewares');
 const response = require('../common/response');
 const userSesionController = require('@controllers/userSessionController');
 const { wrapHandlerWithJSONResponse } = response;
-/* GET users listing. */
+
 router
   .post('/login', wrapHandlerWithJSONResponse(userSesionController.login))
   .post('/register', wrapHandlerWithJSONResponse(userSesionController.register))
