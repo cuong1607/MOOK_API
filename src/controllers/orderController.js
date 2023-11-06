@@ -7,8 +7,11 @@ const sequelize = require('@config/database');
 
 async function getAllOrder(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
+  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status } = req.query;
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE, user_id: auth.id };
+  if (status) {
+    whereCondition.status = status;
+  }
 
   const { rows, count } = await order.findAndCountAll({
     where: whereCondition,
@@ -27,6 +30,9 @@ async function getDetailOrder(req, res) {
     where: whereCondition,
     include: { model: order_item },
   });
+  if (!detail) {
+    throw apiCode.NOT_FOUND;
+  }
   return detail;
 }
 

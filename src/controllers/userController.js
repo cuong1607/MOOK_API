@@ -24,6 +24,9 @@ async function getDetailUser(req, res) {
   const detail = await user.findOne({
     where: whereCondition,
   });
+  if (!detail) {
+    throw apiCode.NOT_FOUND;
+  }
   return detail;
 }
 

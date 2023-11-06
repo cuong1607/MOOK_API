@@ -36,6 +36,9 @@ async function getDetailProduct(req, res) {
     where: whereCondition,
     include: { model: category },
   });
+  if (!detail) {
+    throw apiCode.NOT_FOUND;
+  }
   return detail;
 }
 

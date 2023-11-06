@@ -1,14 +1,14 @@
 const db = require('../models');
-const { category } = db;
+const { color } = db;
 const { config, ROLE, apiCode, IS_ACTIVE, AppError } = require('@utils/constant');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
 
-async function getAllcategory(req, res) {
+async function getAllColor(req, res) {
   const { auth } = req;
   const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
-  const { rows, count } = await category.findAndCountAll({
+  const { rows, count } = await color.findAndCountAll({
     where: { is_active: IS_ACTIVE.ACTIVE },
     limit,
     offset,
@@ -17,11 +17,11 @@ async function getAllcategory(req, res) {
   return { data: rows, paging: { page, count, limit } };
 }
 
-async function getDetailCategory(req, res) {
+async function getDetailColor(req, res) {
   const { id } = req.params;
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE, id };
 
-  const detail = await category.findOne({
+  const detail = await color.findOne({
     where: whereCondition,
   });
   if (!detail) {
@@ -30,73 +30,77 @@ async function getDetailCategory(req, res) {
   return detail;
 }
 
-async function createCategory(req, res) {
+async function createColor(req, res) {
   const schema = Joi.object()
     .keys({
       name: Joi.string().empty('').required(),
       code: Joi.string().empty('').required(),
+      description: Joi.string().empty(''),
     })
     .unknown(true);
-  const { name, code } = await schema.validateAsync(req.body);
+  const { name, description, code } = await schema.validateAsync(req.body);
 
-  const found = await category.findOne({
+  const found = await color.findOne({
     where: { code, is_active: IS_ACTIVE.ACTIVE },
   });
   if (found) {
-    throw new Error('Mã code danh mục đã tồn tại');
+    throw new Error('Mã màu đã tồn tại');
   }
-  const categoryCreated = await category.create({
+  const colorCreated = await color.create({
     name,
     code,
+    description,
   });
-  return categoryCreated;
+  return colorCreated;
 }
-async function updateCategory(req, res) {
+async function updateColor(req, res) {
   const schema = Joi.object()
     .keys({
       name: Joi.string().empty('').required(),
       code: Joi.string().empty('').required(),
+      description: Joi.string().empty(''),
     })
     .unknown(true);
-  const { name, code } = await schema.validateAsync(req.body);
+  const { name, description, code } = await schema.validateAsync(req.body);
   const { id } = req.params;
-  const foundCategory = await category.findOne({
+  const foundColor = await color.findOne({
     where: { id },
   });
-  if (!foundCategory) {
+  if (!foundColor) {
     throw apiCode.NOT_FOUND;
   }
-  const foundCode = await category.findOne({
-    where: { code, id: { [Op.ne]: id } },
+  const foundCode = await color.findOne({
+    where: { name, id: { [Op.ne]: id } },
   });
   if (foundCode) {
-    throw new Error('Mã danh mục đã tồn tại');
+    throw new Error('Mã code đã tồn tại');
   }
-  await foundCategory.update({
+  await foundColor.update({
     name,
     code,
+    description,
     updated_at: new Date(),
   });
-  await foundCategory.reload();
-  return foundCategory;
+  await foundColor.reload();
+  return foundColor;
 }
 
-async function deleteCategory(req, res) {
+async function deleteColor(req, res) {
   const { id } = req.params;
-  const foundCategory = await category.findOne({
+  const foundColor = await color.findOne({
     where: { id },
   });
-  if (!foundCategory) {
+  if (!foundColor) {
     throw apiCode.NOT_FOUND;
   }
-  await foundCategory.update({ is_active: IS_ACTIVE.INACTIVE });
-  await foundCategory.reload();
-  return foundCategory;
+  await foundColor.update({ is_active: IS_ACTIVE.INACTIVE });
+  await foundColor.reload();
+  return foundColor;
 }
 module.exports = {
-  getAllcategory,
-  createCategory,
-  updateCategory,
-  deleteCategory,
-  getDetailCategory,
+  getAllColor,
+  createColor,
+  updateColor,
+  deleteColor,
+  getDetailColor,
 };

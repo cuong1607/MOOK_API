@@ -8,12 +8,18 @@ var logger = require('morgan');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const compression = require('compression');
+
+// define router
 var indexRouter = require('./src/routes/index');
 var usersRouter = require('./src/routes/usersRoutes');
 var userSessionRouter = require('@routes/usersSessionRoutes');
 const categoryRouter = require('@routes/categoryRoutes');
 const productRouter = require('@routes/productRoutes');
 const orderRouter = require('@routes/orderRoutes');
+const sizeRouter = require('@routes/sizeRoutes');
+const colorRouter = require('@routes/colorRoutes');
+const priceRouter = require('@routes/priceRoutes');
+
 const db = require('./src/models/index');
 var app = express();
 
@@ -39,6 +45,9 @@ app.use('/user-session', userSessionRouter);
 app.use('/category', categoryRouter);
 app.use('/product', productRouter);
 app.use('/order', orderRouter);
+app.use('/size', sizeRouter);
+app.use('/color', colorRouter);
+app.use('/price', priceRouter);
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   next(createError(404));
