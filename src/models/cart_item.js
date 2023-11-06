@@ -3,8 +3,8 @@ const { Model } = Sequelize;
 const sequelize = require('../config/database');
 const { IS_ACTIVE } = require('@src/utils/constant');
 
-class product extends Model {}
-product.init(
+class cart_item extends Model {}
+cart_item.init(
   {
     id: {
       type: Sequelize.INTEGER,
@@ -12,28 +12,17 @@ product.init(
       primaryKey: true,
       autoIncrement: true,
     },
-    category_id: {
+    user_id: {
       type: Sequelize.INTEGER,
-    },
-    code: {
-      type: Sequelize.TEXT,
       allowNull: true,
     },
-    name: {
-      type: Sequelize.TEXT,
+    product_id: {
+      type: Sequelize.INTEGER,
       allowNull: true,
     },
-    price: {
+    quantity: {
       type: Sequelize.INTEGER,
-    },
-    description: {
-      type: Sequelize.TEXT,
       allowNull: true,
-    },
-    status: {
-      type: Sequelize.INTEGER,
-      allowNull: false,
-      defaultValue: IS_ACTIVE.ACTIVE,
     },
     is_active: {
       type: Sequelize.INTEGER,
@@ -53,23 +42,18 @@ product.init(
   },
   {
     sequelize,
-    modelName: 'product',
+    modelName: 'cart_item',
     freezeTableName: true,
     timestamps: false,
     paranoid: true,
   },
 );
-product.associate = (db) => {
-  db.product.belongsTo(db.category, {
-    foreignKey: {
-      name: 'category_id',
-    },
-  });
-  db.product.hasOne(db.cart_item, {
+cart_item.associate = (db) => {
+  db.cart_item.belongsTo(db.product, {
     foreignKey: {
       name: 'product_id',
     },
   });
 };
 
-module.exports = () => product;
+module.exports = () => cart_item;
