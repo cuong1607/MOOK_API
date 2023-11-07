@@ -3,7 +3,18 @@ function generateCode(id) {
   const code = `DH${paddedId}`;
   return code;
 }
+let SERVER_URL = process.env.BASE_API_URL || '';
+function getFullUrl(path) {
+  if (!path) {
+    return null;
+  }
 
+  if (!path.startsWith('http')) {
+    return `${SERVER_URL}/${path}`;
+  }
+  return path;
+}
 module.exports = {
   generateCode,
+  getFullUrl,
 };

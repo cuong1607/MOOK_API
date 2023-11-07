@@ -3,4 +3,5 @@ module.exports = {
   authenticateMiddleware: require('./Authenticated'),
   pagingMiddleware: require('./pagingMiddleware'),
   // validateMiddleware: require('./validateMiddleware'),
+  fileMiddleware: require('./uploadMiddleware'),
 };
