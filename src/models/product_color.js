@@ -17,7 +17,7 @@ product_color.init(
       allowNull: true,
     },
     product_id: {
-      type: Sequelize.TEXT,
+      type: Sequelize.INTEGER,
       allowNull: true,
     },
     is_active: {
@@ -44,5 +44,11 @@ product_color.init(
     paranoid: true,
   },
 );
-
+product_color.associate = (db) => {
+  db.product_color.belongsTo(db.product, {
+    foreignKey: {
+      name: 'product_id',
+    },
+  });
+};
 module.exports = () => product_color;

@@ -4,12 +4,17 @@ const { config, ROLE, apiCode, IS_ACTIVE } = require('@utils/constant');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
+const utils = require('@utils/util');
+const sequelize = require('@config/database');
 
 async function getAllUser(req, res) {
   const { auth } = req;
   const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
   const { rows, count } = await user.findAndCountAll({
     where: { is_active: IS_ACTIVE.ACTIVE, id: { [Op.ne]: auth.id } },
+    attributes: {
+      include: [[sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar']],
+    },
     limit,
     offset,
     order: [['id', 'DESC']],
@@ -23,6 +28,9 @@ async function getDetailUser(req, res) {
 
   const detail = await user.findOne({
     where: whereCondition,
+    attributes: {
+      include: [[sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar']],
+    },
   });
   if (!detail) {
     throw apiCode.NOT_FOUND;
@@ -48,7 +56,6 @@ async function createUser(req, res) {
     throw apiCode.PHONE_EXIST;
   }
   const hash = bcrypt.hashSync(password, config.CRYPT_SALT);
-  console.log({ full_name, phone, email, password });
   const userCreated = await user.create({
     full_name,
     phone,

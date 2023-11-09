@@ -34,6 +34,10 @@ user.init(
       type: Sequelize.STRING(200),
       allowNull: true,
     },
+    avatar: {
+      type: Sequelize.STRING(200),
+      allowNull: true,
+    },
     email: {
       type: Sequelize.STRING(45),
       allowNull: true,

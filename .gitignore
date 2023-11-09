@@ -4,6 +4,7 @@ public/templates/*
 public/upload/*
 public/resources/*
 public/samples/*
+uploads/*
 ecosystem.config.js
 .idea/*
 .env

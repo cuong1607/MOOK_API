@@ -17,4 +17,5 @@ function getFullUrl(path) {
 module.exports = {
   generateCode,
   getFullUrl,
+  getUrl: () => `${SERVER_URL}/`,
 };

@@ -3,8 +3,8 @@ const { Model } = Sequelize;
 const sequelize = require('../config/database');
 const { IS_ACTIVE } = require('@src/utils/constant');
 
-class product_size extends Model {}
-product_size.init(
+class product_image extends Model {}
+product_image.init(
   {
     id: {
       type: Sequelize.INTEGER,
@@ -12,8 +12,8 @@ product_size.init(
       primaryKey: true,
       autoIncrement: true,
     },
-    size_id: {
-      type: Sequelize.INTEGER,
+    path: {
+      type: Sequelize.STRING,
       allowNull: true,
     },
     product_id: {
@@ -38,18 +38,18 @@ product_size.init(
   },
   {
     sequelize,
-    modelName: 'product_size',
+    modelName: 'product_image',
     freezeTableName: true,
     timestamps: false,
     paranoid: true,
   },
 );
-product_size.associate = (db) => {
-  db.product_size.belongsTo(db.product, {
+product_image.associate = (db) => {
+  db.product_image.belongsTo(db.product, {
     foreignKey: {
       name: 'product_id',
     },
   });
 };
 
-module.exports = () => product_size;
+module.exports = () => product_image;

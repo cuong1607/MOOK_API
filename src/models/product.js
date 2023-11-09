@@ -70,6 +70,21 @@ product.associate = (db) => {
       name: 'product_id',
     },
   });
+  db.product.hasMany(db.product_image, {
+    foreignKey: {
+      name: 'product_id',
+    },
+  });
+  db.product.hasMany(db.product_color, {
+    foreignKey: {
+      name: 'product_id',
+    },
+  });
+  db.product.hasMany(db.product_size, {
+    foreignKey: {
+      name: 'product_id',
+    },
+  });
 };
 
 module.exports = () => product;
