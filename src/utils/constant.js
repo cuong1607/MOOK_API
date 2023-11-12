@@ -52,6 +52,7 @@ module.exports = Object.freeze({
     CUSTOMER_NOT_FOUND: Error.create({ code: 11, message: 'Khách hàng không tồn tại ' }),
     PRODUCT_NOT_FOUND: Error.create({ code: 56, message: 'Bạn phải chọn ít nhất một sản phẩm để tạo cơ hội ' }),
     PRODUCT_OPPO_NOT_FOUND: Error.create({ code: 56, message: 'Sản phẩm trong cơ hội không tồn tại ' }),
+    PRODUCT_NOT_ENOUGH: Error.create({ code: 56, message: 'Sản phẩm trong kho không đủ để hoàn thành đơn hàng' }),
     JOB_TYPE_NOT_DELETE: Error.create({ code: 11, message: 'Đã có công việc thuộc loại công việc này ' }),
     FB_ERROR: Error.create({ code: 12, message: '' }),
     UNAUTHORIZED: Error.create({ code: 403, message: 'Không có quyền truy cập' }),
@@ -183,5 +184,14 @@ module.exports = Object.freeze({
     SUCCESS: 4, // hoàn thành
     CANCELED: 5, // huỷ
     DENY: 6, // từ chối
+  },
+  STORAGE_TYPE: {
+    ADD: 1,
+    SUB: 2,
+  },
+  STORAGE_CHANGE_TYPE: {
+    CREATE_STORAGE: 1,
+    UPDATE_STORAGE: 2,
+    COMPLETED_ORDER: 3,
   },
 });

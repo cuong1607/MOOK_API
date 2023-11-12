@@ -90,6 +90,11 @@ product.associate = (db) => {
       name: 'product_id',
     },
   });
+  db.product.hasMany(db.storage, {
+    foreignKey: {
+      name: 'product_id',
+    },
+  });
 };
 
 module.exports = () => product;

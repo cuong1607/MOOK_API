@@ -1,6 +1,14 @@
 const db = require('../models');
-const { product, order, order_item, order_state, user, product_image } = db;
-const { config, apiCode, IS_ACTIVE, ORDER_STATUS } = require('@utils/constant');
+const { product, order, order_item, order_state, user, product_image, storage, storage_transaction } = db;
+const {
+  config,
+  apiCode,
+  IS_ACTIVE,
+  ORDER_STATUS,
+  STORAGE_TYPE,
+  STORAGE_CHANGE_TYPE,
+  AppError,
+} = require('@utils/constant');
 const Joi = require('joi');
 const utils = require('@utils/util');
 const sequelize = require('@config/database');
@@ -111,10 +119,13 @@ async function createOrder(req, res) {
     const orderCode = utils.generateCode(orderCreated.id);
     await orderCreated.update({ code: orderCode }, { transaction });
     await order_item.bulkCreate(itemCreated, { transaction });
-    await order_state.create({
-      order_id: orderCreated.id,
-      status: ORDER_STATUS.PENDING,
-    });
+    await order_state.create(
+      {
+        order_id: orderCreated.id,
+        status: ORDER_STATUS.PENDING,
+      },
+      { transaction },
+    );
     return orderCreated;
   });
   return result;
@@ -144,10 +155,13 @@ async function denyOrder(req, res) {
       },
       { transaction },
     );
-    await order_state.create({
-      order_id: foundOrder.id,
-      status: ORDER_STATUS.DENY,
-    });
+    await order_state.create(
+      {
+        order_id: foundOrder.id,
+        status: ORDER_STATUS.DENY,
+      },
+      { transaction },
+    );
   });
 
   await foundOrder.reload();
@@ -171,6 +185,34 @@ async function updateStatusOrder(req, res) {
     throw apiCode.NOT_FOUND;
   }
   const result = await sequelize.transaction(async (transaction) => {
+    if (status == ORDER_STATUS.SUCCESS) {
+      const orderItems = await order_item.findAll({ where: { order_id: foundOrder.id } });
+      for (let i = 0; i < orderItems.length; i++) {
+        const foundStorage = await storage.findOne({ where: { product_id: orderItems[i].product_id } });
+        const stock = Number(foundStorage.stock) - Number(orderItems[i].quantity);
+        const issue = Number(foundStorage.issue) + Number(orderItems[i].quantity);
+        if (stock < 0) {
+          throw apiCode.PRODUCT_NOT_ENOUGH;
+        }
+        await foundStorage.update(
+          {
+            stock,
+            issue,
+          },
+          { transaction },
+        );
+        await storage_transaction.create(
+          {
+            storage_id: foundStorage.id,
+            type: STORAGE_TYPE.SUB,
+            storage_change_type_id: STORAGE_CHANGE_TYPE.COMPLETED_ORDER,
+            amount: Number(orderItems[i].quantity),
+            stock,
+          },
+          { transaction },
+        );
+      }
+    }
     await foundOrder.update(
       {
         status,
@@ -179,10 +221,13 @@ async function updateStatusOrder(req, res) {
       },
       { transaction },
     );
-    await order_state.create({
-      order_id: foundOrder.id,
-      status,
-    });
+    await order_state.create(
+      {
+        order_id: foundOrder.id,
+        status,
+      },
+      { transaction },
+    );
   });
 
   await foundOrder.reload();

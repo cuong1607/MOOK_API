@@ -17,6 +17,11 @@ router
     '/me',
     middleware.authenticateMiddleware.isAuthenticated(),
     wrapHandlerWithJSONResponse(userSesionController.getInfor),
+  )
+  .post(
+    '/update',
+    middleware.authenticateMiddleware.isAuthenticated(),
+    wrapHandlerWithJSONResponse(userSesionController.updateInfor),
   );
 
 module.exports = router;

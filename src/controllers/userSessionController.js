@@ -36,9 +36,10 @@ async function register(req, res) {
       phone: Joi.string().empty('').required(),
       email: Joi.string().email().optional(),
       password: Joi.string().empty('').required(),
+      avatar: Joi.string().empty(''),
     })
     .unknown(true);
-  const { full_name, phone, email, password } = await schema.validateAsync(req.body);
+  const { full_name, phone, email, password, avatar } = await schema.validateAsync(req.body);
   const foundUser = await user.findOne({
     where: { phone, is_active: IS_ACTIVE.ACTIVE },
   });
@@ -53,6 +54,7 @@ async function register(req, res) {
     email,
     password: hash,
     role_id: ROLE.USER,
+    avatar,
   });
   return userCreated;
 }
@@ -64,7 +66,7 @@ async function logout(req, res) {
     logging: console.log,
   });
 
-  if (!user) throw new AppError(apiCode.NOT_FOUND);
+  if (!foundUser) throw new AppError(apiCode.NOT_FOUND);
   await foundUser.update({ token: null });
 }
 
@@ -72,9 +74,30 @@ async function getInfor(req, res) {
   const { auth } = req;
   const foundUser = await user.findOne({
     where: { id: auth.id },
+    attributes: {
+      include: [[sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar']],
+    },
   });
 
-  if (!user) throw new AppError(apiCode.NOT_FOUND);
+  if (!foundUser) throw new AppError(apiCode.NOT_FOUND);
+  return foundUser;
+}
+
+async function updateInfor(req, res) {
+  const { auth } = req;
+  const foundUser = await user.findOne({
+    where: { id: auth.id },
+  });
+  const schema = Joi.object()
+    .keys({
+      full_name: Joi.string().empty('').required(),
+      avatar: Joi.string().empty(''),
+    })
+    .unknown(true);
+  const { full_name, avatar } = await schema.validateAsync(req.body);
+  if (!foundUser) throw new AppError(apiCode.NOT_FOUND);
+  await foundUser.update({ full_name, avatar });
+  await foundUser.reload();
   return foundUser;
 }
 module.exports = {
@@ -82,4 +105,5 @@ module.exports = {
   register,
   logout,
   getInfor,
+  updateInfor,
 };

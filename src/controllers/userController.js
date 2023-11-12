@@ -45,9 +45,10 @@ async function createUser(req, res) {
       phone: Joi.string().empty('').required(),
       email: Joi.string().email().optional(),
       password: Joi.string().empty('').required(),
+      avatar: Joi.string().empty(''),
     })
     .unknown(true);
-  const { full_name, phone, email, password } = await schema.validateAsync(req.body);
+  const { full_name, phone, email, password, avatar } = await schema.validateAsync(req.body);
 
   const foundUser = await user.findOne({
     where: { phone, is_active: IS_ACTIVE.ACTIVE },
@@ -62,6 +63,7 @@ async function createUser(req, res) {
     email,
     password: hash,
     role_id: ROLE.USER,
+    avatar,
   });
   return userCreated;
 }
@@ -72,9 +74,10 @@ async function updateUser(req, res) {
       phone: Joi.string().empty('').required(),
       email: Joi.string().email().optional(),
       password: Joi.string().empty(''),
+      avatar: Joi.string().empty(''),
     })
     .unknown(true);
-  const { full_name, phone, email, password } = await schema.validateAsync(req.body);
+  const { full_name, phone, email, password, avatar } = await schema.validateAsync(req.body);
   const { id } = req.params;
   const foundUser = await user.findOne({
     where: { id },
@@ -92,6 +95,7 @@ async function updateUser(req, res) {
     email,
     password: password ? hash : foundUser.password,
     updated_at: new Date(),
+    avatar,
   });
   await foundUser.reload();
   return foundUser;

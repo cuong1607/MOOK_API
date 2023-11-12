@@ -1,6 +1,6 @@
 const db = require('../models');
-const { product, category, product_color, product_image, product_size } = db;
-const { config, apiCode, IS_ACTIVE } = require('@utils/constant');
+const { product, category, product_color, product_image, product_size, price_group, storage, storage_transaction } = db;
+const { config, apiCode, IS_ACTIVE, STORAGE_TYPE, STORAGE_CHANGE_TYPE } = require('@utils/constant');
 const Joi = require('joi');
 const { Op } = require('sequelize');
 const sequelize = require('@config/database');
@@ -11,16 +11,43 @@ async function getAllProduct(req, res) {
   const schema = Joi.object()
     .keys({
       category_id: Joi.number().empty(''),
+      price_group_id: Joi.number(),
+      color_ids: Joi.string(),
+      size_ids: Joi.string(),
     })
     .unknown(true);
-  const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
+  const whereCondition = { is_active: IS_ACTIVE.ACTIVE, [Op.and]: [] };
 
-  const { category_id, search, size_ids } = await schema.validateAsync(req.query);
+  const { category_id, search, size_ids, color_ids, price_group_id } = await schema.validateAsync(req.query);
   if (category_id) {
     whereCondition.category_id = category_id;
   }
   if (search) {
     whereCondition.name = { [Op.substring]: search };
+  }
+  if (size_ids) {
+    const productSize = await product_size.findAll({
+      where: {
+        size_id: { [Op.in]: size_ids.split(',') },
+      },
+    });
+    const productIDs = productSize.map((data) => data.product_id);
+    whereCondition[Op.and].push({ id: { [Op.in]: productIDs } });
+  }
+  if (color_ids) {
+    const productColor = await product_color.findAll({
+      where: {
+        color_id: { [Op.in]: color_ids.split(',') },
+      },
+    });
+    const productIDs = productColor.map((data) => data.product_id);
+    whereCondition[Op.and].push({ id: { [Op.in]: productIDs } });
+  }
+  if (price_group_id) {
+    const priceGroup = await price_group.findOne({ where: { id: price_group_id } });
+    whereCondition.price = {
+      [Op.and]: [{ [Op.gte]: priceGroup.min_price }, { [Op.lte]: priceGroup.max_price }],
+    };
   }
   const count = await product.count({ where: whereCondition });
   const { rows } = await product.findAndCountAll({
@@ -130,6 +157,17 @@ async function createProduct(req, res) {
     await product_size.bulkCreate(productSizeCreated, { transaction });
     const productImageCreated = images.map((e) => ({ product_id: productCreated.id, path: e }));
     await product_image.bulkCreate(productImageCreated, { transaction });
+    const stroageCreated = await storage.create(
+      { product_id: productCreated.id, stock: 0, receipt: 0, issue: 0 },
+      { transaction },
+    );
+    await storage_transaction.create({
+      storage_id: stroageCreated.id,
+      type: STORAGE_TYPE.ADD,
+      storage_change_type_id: STORAGE_CHANGE_TYPE.CREATE_STORAGE,
+      amount: 0,
+      stock: 0,
+    });
     return productCreated;
   });
 
@@ -165,18 +203,21 @@ async function updateProduct(req, res) {
     throw new Error('Mã sản phẩm đã tồn tại');
   }
   await sequelize.transaction(async (transaction) => {
-    await foundProduct.update({
-      category_id,
-      name,
-      code,
-      price,
-      description,
-      status,
-      updated_at: new Date(),
-    });
-    await product_color.destroy({ where: { product_id: id } });
-    await product_image.destroy({ where: { product_id: id } });
-    await product_size.destroy({ where: { product_id: id } });
+    await foundProduct.update(
+      {
+        category_id,
+        name,
+        code,
+        price,
+        description,
+        status,
+        updated_at: new Date(),
+      },
+      { transaction },
+    );
+    await product_color.destroy({ where: { product_id: id } }, { transaction });
+    await product_image.destroy({ where: { product_id: id } }, { transaction });
+    await product_size.destroy({ where: { product_id: id } }, { transaction });
     const productColorCreated = color_ids.map((e) => ({ product_id: id, color_id: e }));
     await product_color.bulkCreate(productColorCreated, { transaction });
     const productSizeCreated = size_ids.map((e) => ({ product_id: id, size_id: e }));
