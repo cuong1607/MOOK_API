@@ -1,5 +1,5 @@
 const db = require('../models');
-const { product, order, order_item, order_state } = db;
+const { product, order, order_item, order_state, user, product_image } = db;
 const { config, apiCode, IS_ACTIVE, ORDER_STATUS } = require('@utils/constant');
 const Joi = require('joi');
 const utils = require('@utils/util');
@@ -8,13 +8,22 @@ const sequelize = require('@config/database');
 async function getAllOrder(req, res) {
   const { auth } = req;
   const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status } = req.query;
-  const whereCondition = { is_active: IS_ACTIVE.ACTIVE, user_id: auth.id };
+  const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
   if (status) {
     whereCondition.status = status;
   }
 
   const { rows, count } = await order.findAndCountAll({
     where: whereCondition,
+    include: {
+      model: user,
+      attributes: [
+        'id',
+        'full_name',
+        'user_name',
+        [sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar'],
+      ],
+    },
     limit,
     offset,
     order: [['id', 'DESC']],
@@ -28,7 +37,31 @@ async function getDetailOrder(req, res) {
 
   const detail = await order.findOne({
     where: whereCondition,
-    include: { model: order_item, include: { model: product } },
+    include: [
+      {
+        model: order_item,
+        include: {
+          model: product,
+          include: {
+            model: product_image,
+            attributes: {
+              include: [[sequelize.literal(`IF(LENGTH(path) > 0,CONCAT ('${utils.getUrl()}',path), path)`), 'path']],
+            },
+          },
+        },
+      },
+      { model: order_state },
+      {
+        model: user,
+        attributes: [
+          'id',
+          'full_name',
+          'user_name',
+          [sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar'],
+        ],
+      },
+    ],
+    order: [[db.order_state, 'id', 'ASC']],
   });
   if (!detail) {
     throw apiCode.NOT_FOUND;
@@ -42,10 +75,12 @@ async function createOrder(req, res) {
     .keys({
       list_product: Joi.array().empty(''),
       note: Joi.string(),
+      user_id: Joi.number().required(),
       total_payment: Joi.number().required(),
     })
     .unknown(true);
-  const { list_product, note, total_payment } = await schema.validateAsync(req.body);
+  const { list_product, note, user_id, total_payment } = await schema.validateAsync(req.body);
+  let total = 0;
   const orderItemCreated = [];
   for (let i = 0; i < list_product.length; i++) {
     const foundProduct = await product.findOne({
@@ -61,7 +96,7 @@ async function createOrder(req, res) {
   const result = await sequelize.transaction(async (transaction) => {
     const orderCreated = await order.create(
       {
-        user_id: auth.id,
+        user_id,
         note,
         total_price: total_payment,
       },
@@ -84,29 +119,34 @@ async function createOrder(req, res) {
   });
   return result;
 }
-async function cancleOrder(req, res) {
+
+async function denyOrder(req, res) {
   const { auth } = req;
   const { id } = req.params;
+  const schema = Joi.object()
+    .keys({
+      note: Joi.string(),
+    })
+    .unknown(true);
+  const { note } = await schema.validateAsync(req.body);
   const foundOrder = await order.findOne({
     where: { id },
   });
   if (!foundOrder) {
     throw apiCode.NOT_FOUND;
   }
-  if (foundOrder.user_id != auth.id) {
-    throw new Error('Đơn hàng không phải của bạn');
-  }
   const result = await sequelize.transaction(async (transaction) => {
     await foundOrder.update(
       {
-        status: ORDER_STATUS.CANCELED,
+        status: ORDER_STATUS.DENY,
         updated_at: new Date(),
+        note,
       },
       { transaction },
     );
     await order_state.create({
       order_id: foundOrder.id,
-      status: ORDER_STATUS.CANCELED,
+      status: ORDER_STATUS.DENY,
     });
   });
 
@@ -114,9 +154,44 @@ async function cancleOrder(req, res) {
   return foundOrder;
 }
 
+async function updateStatusOrder(req, res) {
+  const { auth } = req;
+  const { id } = req.params;
+  const schema = Joi.object()
+    .keys({
+      note: Joi.string(),
+      status: Joi.number().required(),
+    })
+    .unknown(true);
+  const { note, status } = await schema.validateAsync(req.body);
+  const foundOrder = await order.findOne({
+    where: { id },
+  });
+  if (!foundOrder) {
+    throw apiCode.NOT_FOUND;
+  }
+  const result = await sequelize.transaction(async (transaction) => {
+    await foundOrder.update(
+      {
+        status,
+        updated_at: new Date(),
+        note,
+      },
+      { transaction },
+    );
+    await order_state.create({
+      order_id: foundOrder.id,
+      status,
+    });
+  });
+
+  await foundOrder.reload();
+  return foundOrder;
+}
 module.exports = {
   createOrder,
   getAllOrder,
   getDetailOrder,
-  cancleOrder,
+  denyOrder,
+  updateStatusOrder,
 };

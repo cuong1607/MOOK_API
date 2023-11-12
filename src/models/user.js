@@ -86,6 +86,14 @@ user.init(
     paranoid: true,
   },
 );
+user.associate = (db) => {
+  db.user.hasMany(db.order, {
+    foreignKey: {
+      name: 'user_id',
+    },
+  });
+};
+
 user.prototype.generateToken = function generateToken() {
   return auth.createJWToken({
     id: this.id,

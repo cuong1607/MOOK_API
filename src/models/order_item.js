@@ -58,5 +58,10 @@ order_item.associate = (db) => {
       name: 'order_id',
     },
   });
+  db.order_item.belongsTo(db.product, {
+    foreignKey: {
+      name: 'product_id',
+    },
+  });
 };
 module.exports = () => order_item;

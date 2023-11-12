@@ -58,5 +58,15 @@ order.associate = (db) => {
       name: 'order_id',
     },
   });
+  db.order.hasMany(db.order_state, {
+    foreignKey: {
+      name: 'order_id',
+    },
+  });
+  db.order.belongsTo(db.user, {
+    foreignKey: {
+      name: 'user_id',
+    },
+  });
 };
 module.exports = () => order;

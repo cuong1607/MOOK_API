@@ -21,6 +21,7 @@ const colorRouter = require('@routes/colorRoutes');
 const priceRouter = require('@routes/priceRoutes');
 const cartRouter = require('@routes/cartRoutes');
 const fileRouter = require('@routes/fileRoutes');
+const adminOrderRouter = require('@routes/adminOrderRoutes');
 
 const db = require('./src/models/index');
 var app = express();
@@ -53,6 +54,7 @@ app.use('/color', colorRouter);
 app.use('/price', priceRouter);
 app.use('/cart', cartRouter);
 app.use('/upload', fileRouter);
+app.use('/admin-order', adminOrderRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

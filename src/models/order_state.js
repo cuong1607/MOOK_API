@@ -44,4 +44,12 @@ order_state.init(
     paranoid: true,
   },
 );
+
+order_state.associate = (db) => {
+  db.order_state.belongsTo(db.order, {
+    foreignKey: {
+      name: 'order_id',
+    },
+  });
+};
 module.exports = () => order_state;
