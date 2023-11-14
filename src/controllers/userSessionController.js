@@ -4,6 +4,8 @@ const { user } = db;
 const { config, ROLE, apiCode, IS_ACTIVE, AppError } = require('@utils/constant');
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
+const sequelize = require('@config/database');
+const utils = require('@utils/util');
 
 async function login(req, res) {
   const schema = Joi.object()
