@@ -5,6 +5,11 @@ const response = require('../common/response');
 const priceController = require('@controllers/priceController');
 const { ROLE } = require('@src/utils/constant');
 const { wrapHandlerWithJSONResponse } = response;
+
+const supportMiddlewareNoToken = [
+  middleware.authorizeMiddleware([ROLE.USER, ROLE.ADMIN]),
+  middleware.pagingMiddleware(),
+];
 const supportMiddleware = [
   middleware.authenticateMiddleware.isAuthenticated(),
   middleware.authorizeMiddleware([ROLE.USER, ROLE.ADMIN]),

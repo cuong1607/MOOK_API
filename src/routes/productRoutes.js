@@ -14,8 +14,8 @@ const supportMiddleware = [
 router
   .get('/', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(productController.getAllProduct))
   .get('/:id', wrapHandlerWithJSONResponse(productController.getDetailProduct))
-  .post('/', supportMiddleware, wrapHandlerWithJSONResponse(productController.createProduct))
-  .patch('/:id', supportMiddleware, wrapHandlerWithJSONResponse(productController.updateProduct))
-  .delete('/:id', supportMiddleware, wrapHandlerWithJSONResponse(productController.deleteProduct));
+  .post('/', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(productController.createProduct))
+  .patch('/:id', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(productController.updateProduct))
+  .delete('/:id', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(productController.deleteProduct));
 
 module.exports = router;

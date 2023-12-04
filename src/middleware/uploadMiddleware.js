@@ -14,26 +14,27 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (req.asset_type == MEDIA_TYPE.VIDEO) {
-    if (file.mimetype === 'video/mp4') {
-      cb(null, true);
-    } else {
-      cb(new Error('Vui lòng chọn ảnh theo định dạng jpg/jpeg hoặc png'), false);
-    }
-  } else if (req.asset_type == MEDIA_TYPE.IMAGE) {
-    if (
-      file.mimetype === 'image/jpg' ||
-      file.mimetype === 'image/jpeg' ||
-      file.mimetype === 'image/png' ||
-      file.mimetype === 'video/mp4'
-    ) {
-      cb(null, true);
-    } else {
-      cb(new Error('Vui lòng chọn ảnh theo định dạng jpg/jpeg hoặc png'), false);
-    }
-  } else {
-    cb(null, true);
-  }
+  // if (req.asset_type == MEDIA_TYPE.VIDEO) {
+  //   if (file.mimetype === 'video/mp4') {
+  //     cb(null, true);
+  //   } else {
+  //     cb(new Error('Vui lòng chọn ảnh theo định dạng jpg/jpeg hoặc png'), false);
+  //   }
+  // } else if (req.asset_type == MEDIA_TYPE.IMAGE) {
+  //   if (
+  //     file.mimetype === 'image/jpg' ||
+  //     file.mimetype === 'image/jpeg' ||
+  //     file.mimetype === 'image/png' ||
+  //     file.mimetype === 'video/mp4'
+  //   ) {
+  //     cb(null, true);
+  //   } else {
+  //     cb(new Error('Vui lòng chọn ảnh theo định dạng jpg/jpeg hoặc png'), false);
+  //   }
+  // } else {
+  //   cb(null, true);
+  // }
+  cb(null, true);
 };
 
 const imageUploader = multer({ storage, fileFilter });

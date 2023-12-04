@@ -11,8 +11,13 @@ const supportMiddleware = [
   middleware.pagingMiddleware(),
 ];
 
+const supportMiddlewareNoToken = [
+  middleware.authorizeMiddleware([ROLE.USER, ROLE.ADMIN]),
+  middleware.pagingMiddleware(),
+];
+
 router
-  .get('/', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(categoryController.getAllcategory))
+  .get('/', supportMiddlewareNoToken, wrapHandlerWithJSONResponse(categoryController.getAllcategory))
   .get('/:id', wrapHandlerWithJSONResponse(categoryController.getDetailCategory))
   .post('/', supportMiddleware, wrapHandlerWithJSONResponse(categoryController.createCategory))
   .patch('/:id', supportMiddleware, wrapHandlerWithJSONResponse(categoryController.updateCategory))

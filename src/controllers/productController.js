@@ -52,12 +52,19 @@ async function getAllProduct(req, res) {
   const count = await product.count({ where: whereCondition });
   const { rows } = await product.findAndCountAll({
     where: whereCondition,
-    include: {
-      model: product_image,
-      attributes: {
+    include: [
+      {
+        model: product_image,
+        attributes: {
         include: [[sequelize.literal(`IF(LENGTH(path) > 0,CONCAT ('${utils.getUrl()}',path), path)`), 'path']],
       },
     },
+      {
+        model: category,
+        attributes: ['id', 'name'], // Chọn các trường 'id' và 'name' của mô hình category
+      },
+    ],
+    
     limit,
     offset,
     order: [['id', 'DESC']],
