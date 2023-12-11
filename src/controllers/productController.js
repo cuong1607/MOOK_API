@@ -56,15 +56,15 @@ async function getAllProduct(req, res) {
       {
         model: product_image,
         attributes: {
-        include: [[sequelize.literal(`IF(LENGTH(path) > 0,CONCAT ('${utils.getUrl()}',path), path)`), 'path']],
+          include: [[sequelize.literal(`IF(LENGTH(path) > 0,CONCAT ('${utils.getUrl()}',path), path)`), 'path']],
+        },
       },
-    },
       {
         model: category,
         attributes: ['id', 'name'], // Chọn các trường 'id' và 'name' của mô hình category
       },
     ],
-    
+
     limit,
     offset,
     order: [['id', 'DESC']],
