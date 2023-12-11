@@ -10,7 +10,10 @@ const supportMiddleware = [
   middleware.authorizeMiddleware([ROLE.USER, ROLE.ADMIN]),
   middleware.pagingMiddleware(),
 ];
-
+const supportMiddlewareNoToken = [
+  middleware.authorizeMiddleware([ROLE.USER, ROLE.ADMIN]),
+  middleware.pagingMiddleware(),
+];
 const supportAuthorMiddleware = [
   middleware.authenticateMiddleware.isAuthenticated(),
   middleware.authorizeMiddleware([ROLE.ADMIN]),
@@ -18,7 +21,7 @@ const supportAuthorMiddleware = [
 ];
 
 router
-  .get('/', supportMiddleware, wrapHandlerWithJSONResponse(sizeController.getAllSize))
+  .get('/', supportMiddlewareNoToken, wrapHandlerWithJSONResponse(sizeController.getAllSize))
   .get('/:id', supportMiddleware, wrapHandlerWithJSONResponse(sizeController.getDetailSize))
   .post('/', supportAuthorMiddleware, wrapHandlerWithJSONResponse(sizeController.createSize))
   .patch('/:id', supportAuthorMiddleware, wrapHandlerWithJSONResponse(sizeController.updateSize))

@@ -18,7 +18,7 @@ const supportAuthorMiddleware = [
 ];
 
 router
-  .get('/', supportMiddleware, wrapHandlerWithJSONResponse(colorController.getAllColor))
+  .get('/', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(colorController.getAllColor))
   .get('/:id', supportMiddleware, wrapHandlerWithJSONResponse(colorController.getDetailColor))
   .post('/', supportAuthorMiddleware, wrapHandlerWithJSONResponse(colorController.createColor))
   .patch('/:id', supportAuthorMiddleware, wrapHandlerWithJSONResponse(colorController.updateColor))

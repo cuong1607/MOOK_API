@@ -23,7 +23,7 @@ const supportAuthorMiddleware = [
 ];
 
 router
-  .get('/', supportMiddleware, wrapHandlerWithJSONResponse(priceController.getAllPrice))
+  .get('/', supportMiddlewareNoToken, wrapHandlerWithJSONResponse(priceController.getAllPrice))
   .get('/:id', supportMiddleware, wrapHandlerWithJSONResponse(priceController.getDetailPrice))
   .post('/', supportAuthorMiddleware, wrapHandlerWithJSONResponse(priceController.createPrice))
   .patch('/:id', supportAuthorMiddleware, wrapHandlerWithJSONResponse(priceController.updatePrice))

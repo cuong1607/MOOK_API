@@ -12,10 +12,10 @@ const supportMiddleware = [
 ];
 
 router
-  .get('/', supportMiddleware, wrapHandlerWithJSONResponse(cartController.getAllCart))
-  .get('/:id', supportMiddleware, wrapHandlerWithJSONResponse(cartController.getDetailCart))
-  .post('/', supportMiddleware, wrapHandlerWithJSONResponse(cartController.createCart))
-  .patch('/:id', supportMiddleware, wrapHandlerWithJSONResponse(cartController.updateCart))
-  .delete('/:id', supportMiddleware, wrapHandlerWithJSONResponse(cartController.deleteCart));
+  .get('/', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(cartController.getAllCart))
+  .get('/:id', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(cartController.getDetailCart))
+  .post('/', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(cartController.createCart))
+  .patch('/:id', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(cartController.updateCart))
+  .delete('/:id', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(cartController.deleteCart));
 
 module.exports = router;
