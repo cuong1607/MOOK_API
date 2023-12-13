@@ -15,6 +15,9 @@ product.init(
     category_id: {
       type: Sequelize.INTEGER,
     },
+    branch_id: {
+      type: Sequelize.INTEGER,
+    },
     code: {
       type: Sequelize.TEXT,
       allowNull: true,
@@ -65,6 +68,19 @@ product.associate = (db) => {
       name: 'category_id',
     },
   });
+
+  db.product.belongsTo(db.branch, {
+    foreignKey: {
+      name: 'branch_id',
+    },
+  });
+
+  db.product.hasMany(db.product_price, {
+    foreignKey: {
+      name: 'product_id',
+    },
+  });
+
   db.product.hasOne(db.cart_item, {
     foreignKey: {
       name: 'product_id',

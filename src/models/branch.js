@@ -3,8 +3,8 @@ const { Model } = Sequelize;
 const sequelize = require('../config/database');
 const { IS_ACTIVE } = require('@src/utils/constant');
 
-class storage extends Model {}
-storage.init(
+class branch extends Model {}
+branch.init(
   {
     id: {
       type: Sequelize.INTEGER,
@@ -12,20 +12,13 @@ storage.init(
       primaryKey: true,
       autoIncrement: true,
     },
-    product_price_id: {
-      type: Sequelize.INTEGER,
+    name: {
+      type: Sequelize.TEXT,
       allowNull: true,
     },
-    stock: {
-      type: Sequelize.INTEGER,
-      defaultValue: 1,
-    },
-    receipt: {
-      type: Sequelize.INTEGER,
-      defaultValue: 1,
-    },
-    issue: {
-      type: Sequelize.INTEGER,
+    description: {
+      type: Sequelize.TEXT,
+      allowNull: true,
     },
     is_active: {
       type: Sequelize.INTEGER,
@@ -45,18 +38,19 @@ storage.init(
   },
   {
     sequelize,
-    modelName: 'storage',
+    modelName: 'branch',
     freezeTableName: true,
     timestamps: false,
     paranoid: true,
   },
 );
 
-storage.associate = (db) => {
-  db.storage.belongsTo(db.product, {
+branch.associate = (db) => {
+  db.branch.hasOne(db.product, {
     foreignKey: {
-      name: 'product_id',
+      name: 'branch_id',
     },
   });
 };
-module.exports = () => storage;
+
+module.exports = () => branch;

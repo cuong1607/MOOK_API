@@ -1,5 +1,16 @@
 const db = require('../models');
-const { product, category, product_color, product_image, product_size, price_group, storage, storage_transaction } = db;
+const {
+  product,
+  category,
+  product_color,
+  product_image,
+  product_size,
+  price_group,
+  storage,
+  storage_transaction,
+  product_price,
+  branch,
+} = db;
 const { config, apiCode, IS_ACTIVE, STORAGE_TYPE, STORAGE_CHANGE_TYPE } = require('@utils/constant');
 const Joi = require('joi');
 const { Op } = require('sequelize');
@@ -11,6 +22,7 @@ async function getAllProduct(req, res) {
   const schema = Joi.object()
     .keys({
       category_id: Joi.number().empty(''),
+      branch_id: Joi.number().empty(''),
       price_group_id: Joi.number(),
       color_ids: Joi.string(),
       size_ids: Joi.string(),
@@ -18,24 +30,18 @@ async function getAllProduct(req, res) {
     .unknown(true);
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE, [Op.and]: [] };
 
-  const { category_id, search, size_ids, color_ids, price_group_id } = await schema.validateAsync(req.query);
+  const { category_id, search, branch_id, color_ids, price_group_id } = await schema.validateAsync(req.query);
   if (category_id) {
     whereCondition.category_id = category_id;
+  }
+  if (branch_id) {
+    whereCondition.branch_id = branch_id;
   }
   if (search) {
     whereCondition.name = { [Op.substring]: search };
   }
-  if (size_ids) {
-    const productSize = await product_size.findAll({
-      where: {
-        size_id: { [Op.in]: size_ids.split(',') },
-      },
-    });
-    const productIDs = productSize.map((data) => data.product_id);
-    whereCondition[Op.and].push({ id: { [Op.in]: productIDs } });
-  }
   if (color_ids) {
-    const productColor = await product_color.findAll({
+    const productColor = await product_price.findAll({
       where: {
         color_id: { [Op.in]: color_ids.split(',') },
       },
@@ -63,6 +69,10 @@ async function getAllProduct(req, res) {
         model: category,
         attributes: ['id', 'name'], // Chọn các trường 'id' và 'name' của mô hình category
       },
+      {
+        model: branch,
+        attributes: ['id', 'name'], // Chọn các trường 'id' và 'name' của mô hình category
+      },
     ],
 
     limit,
@@ -87,31 +97,16 @@ async function getDetailProduct(req, res) {
         },
       },
       {
-        model: product_color,
+        model: product_price,
         attributes: {
           include: [
             [
               sequelize.literal(`(SELECT
                 name FROM color
-                where id = product_colors.color_id
+                where id = product_prices.color_id
                 LIMIT 1
               )`),
               'color',
-            ],
-          ],
-        },
-      },
-      {
-        model: product_size,
-        attributes: {
-          include: [
-            [
-              sequelize.literal(`(SELECT
-                name FROM size
-                where id = product_sizes.size_id
-                LIMIT 1
-              )`),
-              'size',
             ],
           ],
         },
@@ -128,16 +123,15 @@ async function createProduct(req, res) {
   const schema = Joi.object()
     .keys({
       category_id: Joi.number().empty('').required(),
+      branch_id: Joi.number().empty('').required(),
       name: Joi.string().empty('').required(),
       code: Joi.string().empty('').required(),
-      price: Joi.number().empty('').required(),
       description: Joi.string(),
       images: Joi.array().required(),
-      color_ids: Joi.array().required(),
-      size_ids: Joi.array().required(),
+      product_prices: Joi.array(),
     })
     .unknown(true);
-  const { category_id, name, code, price, description, images, color_ids, size_ids } = await schema.validateAsync(
+  const { category_id, name, code, description, images, product_prices, branch_id } = await schema.validateAsync(
     req.body,
   );
 
@@ -153,28 +147,47 @@ async function createProduct(req, res) {
         name,
         code,
         category_id,
-        price,
+        branch_id,
         description,
       },
       { transaction },
     );
-    const productColorCreated = color_ids.map((e) => ({ product_id: productCreated.id, color_id: e }));
-    await product_color.bulkCreate(productColorCreated, { transaction });
-    const productSizeCreated = size_ids.map((e) => ({ product_id: productCreated.id, size_id: e }));
-    await product_size.bulkCreate(productSizeCreated, { transaction });
+    // const productColorCreated = color_ids.map((e) => ({ product_id: productCreated.id, color_id: e }));
+    // await product_color.bulkCreate(productColorCreated, { transaction });
+    // const productSizeCreated = size_ids.map((e) => ({ product_id: productCreated.id, size_id: e }));
+    // await product_size.bulkCreate(productSizeCreated, { transaction });
     const productImageCreated = images.map((e) => ({ product_id: productCreated.id, path: e }));
     await product_image.bulkCreate(productImageCreated, { transaction });
-    const stroageCreated = await storage.create(
-      { product_id: productCreated.id, stock: 0, receipt: 0, issue: 0 },
-      { transaction },
-    );
-    await storage_transaction.create({
-      storage_id: stroageCreated.id,
-      type: STORAGE_TYPE.ADD,
-      storage_change_type_id: STORAGE_CHANGE_TYPE.CREATE_STORAGE,
-      amount: 0,
-      stock: 0,
-    });
+
+    for (let index = 0; index < product_prices.length; index++) {
+      const productPrice = await product_price.create(
+        {
+          color_id: product_prices[index].color_id,
+          product_id: productCreated.id,
+          price: product_prices[index].price,
+          amount: product_prices[index].amount,
+          discount: product_prices[index].discount,
+        },
+        { transaction },
+      );
+      const stroageCreated = await storage.create(
+        {
+          product_price_id: productPrice.id,
+          stock: product_prices[index].amount,
+          receipt: product_prices[index].amount,
+          issue: 0,
+        },
+        { transaction },
+      );
+      await storage_transaction.create({
+        storage_id: stroageCreated.id,
+        type: STORAGE_TYPE.ADD,
+        storage_change_type_id: STORAGE_CHANGE_TYPE.CREATE_STORAGE,
+        amount: product_prices[index].amount,
+        stock: product_prices[index].amount,
+      });
+    }
+
     return productCreated;
   });
 
