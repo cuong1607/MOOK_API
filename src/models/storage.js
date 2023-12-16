@@ -53,9 +53,9 @@ storage.init(
 );
 
 storage.associate = (db) => {
-  db.storage.belongsTo(db.product, {
+  db.storage.belongsTo(db.product_price, {
     foreignKey: {
-      name: 'product_id',
+      name: 'product_price_id',
     },
   });
 };

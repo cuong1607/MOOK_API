@@ -62,6 +62,16 @@ product_price.associate = (db) => {
       name: 'product_id',
     },
   });
+  db.product_price.belongsTo(db.color, {
+    foreignKey: {
+      name: 'color_id',
+    },
+  });
+  db.product_price.hasMany(db.storage, {
+    foreignKey: {
+      name: 'product_id',
+    },
+  });
 };
 
 module.exports = () => product_price;

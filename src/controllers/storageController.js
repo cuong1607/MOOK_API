@@ -1,5 +1,5 @@
 const db = require('../models');
-const { storage, storage_transaction, product } = db;
+const { storage, storage_transaction, product, product_price, color } = db;
 const { config, apiCode, IS_ACTIVE, STORAGE_TYPE, STORAGE_CHANGE_TYPE } = require('@utils/constant');
 const Joi = require('joi');
 const { Op } = require('sequelize');
@@ -10,8 +10,25 @@ async function getAllStorage(req, res) {
   const { page = 1, limit = config.PAGING_LIMIT, offset = 0 } = req.query;
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
   const { rows, count } = await storage.findAndCountAll({
+    attributes: {
+      include: [
+        [
+          sequelize.literal(`(SELECT
+          product.name FROM product join product_price on product_price.product_id = product.id
+          where product_price.id = storage.product_price_id
+          LIMIT 1
+        )`),
+          'product_name',
+        ],
+      ],
+    },
     where: whereCondition,
-    include: { model: product },
+    include: {
+      model: product_price,
+      include: {
+        model: color,
+      },
+    },
     limit,
     offset,
     order: [['id', 'DESC']],

@@ -49,4 +49,12 @@ color.init(
   },
 );
 
+color.associate = (db) => {
+  db.color.hasOne(db.product_price, {
+    foreignKey: {
+      name: 'color_id',
+    },
+  });
+};
+
 module.exports = () => color;

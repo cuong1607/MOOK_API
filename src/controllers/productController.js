@@ -110,6 +110,9 @@ async function getDetailProduct(req, res) {
             ],
           ],
         },
+        where: {
+          is_active: IS_ACTIVE.ACTIVE,
+        },
       },
     ],
   });
@@ -199,7 +202,6 @@ async function updateProduct(req, res) {
       category_id: Joi.number().empty('').required(),
       name: Joi.string().empty('').required(),
       code: Joi.string().empty('').required(),
-      price: Joi.number().empty('').required(),
       description: Joi.string(),
       status: Joi.number().empty('').required(),
       images: Joi.array().required(),
@@ -207,8 +209,7 @@ async function updateProduct(req, res) {
       size_ids: Joi.array().required(),
     })
     .unknown(true);
-  const { category_id, name, code, price, description, status, images, color_ids, size_ids } =
-    await schema.validateAsync(req.body);
+  const { category_id, name, code, description, status, images } = await schema.validateAsync(req.body);
   const { id } = req.params;
   const foundProduct = await product.findOne({
     where: { id },
@@ -228,20 +229,13 @@ async function updateProduct(req, res) {
         category_id,
         name,
         code,
-        price,
         description,
         status,
         updated_at: new Date(),
       },
       { transaction },
     );
-    await product_color.destroy({ where: { product_id: id } }, { transaction });
     await product_image.destroy({ where: { product_id: id } }, { transaction });
-    await product_size.destroy({ where: { product_id: id } }, { transaction });
-    const productColorCreated = color_ids.map((e) => ({ product_id: id, color_id: e }));
-    await product_color.bulkCreate(productColorCreated, { transaction });
-    const productSizeCreated = size_ids.map((e) => ({ product_id: id, size_id: e }));
-    await product_size.bulkCreate(productSizeCreated, { transaction });
     const productImageCreated = images.map((e) => ({ product_id: id, path: e }));
     await product_image.bulkCreate(productImageCreated, { transaction });
   });

@@ -24,6 +24,7 @@ const fileRouter = require('@routes/fileRoutes');
 const adminOrderRouter = require('@routes/adminOrderRoutes');
 const storageRouter = require('@routes/storageRoutes');
 const branchRouter = require('@routes/branchRoutes');
+const productPriceRouter = require('@routes/productPriceRoutes');
 
 const db = require('./src/models/index');
 var app = express();
@@ -59,6 +60,7 @@ app.use('/upload', fileRouter);
 app.use('/admin-order', adminOrderRouter);
 app.use('/storage', storageRouter);
 app.use('/branch', branchRouter);
+app.use('/product-price', productPriceRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
