@@ -71,7 +71,33 @@ async function getAllProduct(req, res) {
       },
       {
         model: branch,
-        attributes: ['id', 'name'], // Chọn các trường 'id' và 'name' của mô hình category
+        attributes: ['id', 'name'], // Chọn các trường 'id' và 'name' của mô hình branch
+      },
+      {
+        model: product_price,
+        attributes: {
+          include: [
+            [
+              sequelize.literal(`(SELECT
+                code FROM color
+                where id = product_prices.color_id
+                LIMIT 1
+              )`),
+              'code',
+            ],
+            [
+              sequelize.literal(`(SELECT
+                name FROM color
+                where id = product_prices.color_id
+                LIMIT 1
+              )`),
+              'color',
+            ],
+          ],
+        },
+        where: {
+          is_active: IS_ACTIVE.ACTIVE,
+        },
       },
     ],
 
@@ -107,6 +133,14 @@ async function getDetailProduct(req, res) {
                 LIMIT 1
               )`),
               'color',
+            ],
+            [
+              sequelize.literal(`(SELECT
+                code FROM color
+                where id = product_prices.color_id
+                LIMIT 1
+              )`),
+              'code',
             ],
           ],
         },
