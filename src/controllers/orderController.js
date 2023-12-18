@@ -1,9 +1,10 @@
 const db = require('../models');
-const { product, order, order_item, order_state } = db;
+const { product, order, order_item, order_state, cart_item, product_price } = db;
 const { config, apiCode, IS_ACTIVE, ORDER_STATUS } = require('@utils/constant');
 const Joi = require('joi');
 const utils = require('@utils/util');
 const sequelize = require('@config/database');
+const { Op } = require('sequelize');
 
 async function getAllOrder(req, res) {
   const { auth } = req;
@@ -12,9 +13,42 @@ async function getAllOrder(req, res) {
   if (status) {
     whereCondition.status = status;
   }
-
-  const { rows, count } = await order.findAndCountAll({
+  const count = await order.count({
     where: whereCondition,
+  });
+  const { rows } = await order.findAndCountAll({
+    where: whereCondition,
+    include: {
+      model: order_item,
+      attributes: {
+        include: [
+          [
+            sequelize.literal(`(SELECT
+            name FROM product JOIN product_price ON product_price.product_id = product.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+            'product_name',
+          ],
+          [
+            sequelize.literal(`(SELECT
+            name FROM color JOIN product_price ON product_price.color_id = color.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+            'product_color',
+          ],
+          [
+            sequelize.literal(`(SELECT
+            code FROM color JOIN product_price ON product_price.color_id = color.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+            'product_color_code',
+          ],
+        ],
+      },
+    },
     limit,
     offset,
     order: [['id', 'DESC']],
@@ -28,7 +62,37 @@ async function getDetailOrder(req, res) {
 
   const detail = await order.findOne({
     where: whereCondition,
-    include: { model: order_item, include: { model: product } },
+    include: {
+      model: order_item,
+      attributes: {
+        include: [
+          [
+            sequelize.literal(`(SELECT
+            name FROM product JOIN product_price ON product_price.product_id = product.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+            'product_name',
+          ],
+          [
+            sequelize.literal(`(SELECT
+            name FROM color JOIN product_price ON product_price.color_id = color.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+            'product_color',
+          ],
+          [
+            sequelize.literal(`(SELECT
+            code FROM color JOIN product_price ON product_price.color_id = color.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+            'product_color_code',
+          ],
+        ],
+      },
+    },
   });
   if (!detail) {
     throw apiCode.NOT_FOUND;
@@ -40,46 +104,61 @@ async function createOrder(req, res) {
   const { auth } = req;
   const schema = Joi.object()
     .keys({
-      list_product: Joi.array().empty(''),
       note: Joi.string(),
-      total_payment: Joi.number().required(),
+      cart_items: Joi.array().empty('').required(),
+      payment_method: Joi.number().required(),
     })
     .unknown(true);
-  const { list_product, note, total_payment } = await schema.validateAsync(req.body);
+  const { note, cart_items, payment_method } = await schema.validateAsync(req.body);
   const orderItemCreated = [];
-  for (let i = 0; i < list_product.length; i++) {
-    const foundProduct = await product.findOne({
-      where: { id: list_product[i].product_id },
-    });
-    total = Number(total) + Number(foundProduct.price) * Number(list_product[i].quantity);
+  let total_payment = 0;
+
+  const foundCart = await cart_item.findAll({
+    where: { id: { [Op.in]: cart_items } },
+    include: {
+      model: product_price,
+    },
+  });
+  if (!foundCart) {
+    throw apiCode.NOT_FOUND;
+  }
+  for (let i = 0; i < foundCart.length; i++) {
+    const price = foundCart[i].product_price.price;
+    const discount = foundCart[i].product_price.discount || 0;
+    total_payment = total_payment + (Number(price) - Number(discount)) * Number(foundCart[i].quantity);
     orderItemCreated.push({
-      product_id: list_product[i].product_id,
-      quantity: list_product[i].quantity,
-      price: Number(foundProduct.price) * Number(list_product[i].quantity),
+      product_price_id: foundCart[i].product_price_id,
+      quantity: foundCart[i].quantity,
+      price: Number(price) - Number(discount),
     });
   }
   const result = await sequelize.transaction(async (transaction) => {
+    await cart_item.update({ is_active: IS_ACTIVE.INACTIVE }, { where: { id: { [Op.in]: cart_items } }, transaction });
     const orderCreated = await order.create(
       {
-        user_id: auth.id,
+        user_id: auth ? auth.id : null,
         note,
         total_price: total_payment,
+        payment_method,
       },
       { transaction },
     );
     const itemCreated = orderItemCreated.map((e) => ({
       order_id: orderCreated.id,
-      product_id: e.product_id,
+      product_price_id: e.product_price_id,
       quantity: e.quantity,
       price: e.price,
     }));
     const orderCode = utils.generateCode(orderCreated.id);
     await orderCreated.update({ code: orderCode }, { transaction });
     await order_item.bulkCreate(itemCreated, { transaction });
-    await order_state.create({
-      order_id: orderCreated.id,
-      status: ORDER_STATUS.PENDING,
-    });
+    await order_state.create(
+      {
+        order_id: orderCreated.id,
+        status: ORDER_STATUS.PENDING,
+      },
+      { transaction },
+    );
     return orderCreated;
   });
   return result;

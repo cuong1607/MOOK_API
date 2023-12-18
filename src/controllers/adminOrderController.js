@@ -23,15 +23,48 @@ async function getAllOrder(req, res) {
 
   const { rows, count } = await order.findAndCountAll({
     where: whereCondition,
-    include: {
-      model: user,
-      attributes: [
-        'id',
-        'full_name',
-        'user_name',
-        [sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar'],
-      ],
-    },
+    include: [
+      {
+        model: user,
+        attributes: [
+          'id',
+          'full_name',
+          'user_name',
+          [sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar'],
+        ],
+      },
+      {
+        model: order_item,
+        attributes: {
+          include: [
+            [
+              sequelize.literal(`(SELECT
+            name FROM product JOIN product_price ON product_price.product_id = product.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+              'product_name',
+            ],
+            [
+              sequelize.literal(`(SELECT
+            name FROM color JOIN product_price ON product_price.color_id = color.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+              'product_color',
+            ],
+            [
+              sequelize.literal(`(SELECT
+            code FROM color JOIN product_price ON product_price.color_id = color.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+              'product_color_code',
+            ],
+          ],
+        },
+      },
+    ],
     limit,
     offset,
     order: [['id', 'DESC']],
@@ -48,14 +81,33 @@ async function getDetailOrder(req, res) {
     include: [
       {
         model: order_item,
-        include: {
-          model: product,
-          include: {
-            model: product_image,
-            attributes: {
-              include: [[sequelize.literal(`IF(LENGTH(path) > 0,CONCAT ('${utils.getUrl()}',path), path)`), 'path']],
-            },
-          },
+        attributes: {
+          include: [
+            [
+              sequelize.literal(`(SELECT
+            name FROM product JOIN product_price ON product_price.product_id = product.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+              'product_name',
+            ],
+            [
+              sequelize.literal(`(SELECT
+            name FROM color JOIN product_price ON product_price.color_id = color.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+              'product_color',
+            ],
+            [
+              sequelize.literal(`(SELECT
+            code FROM color JOIN product_price ON product_price.color_id = color.id
+            where product_price.id = order_items.product_price_id
+            LIMIT 1
+          )`),
+              'product_color_code',
+            ],
+          ],
         },
       },
       { model: order_state },
@@ -188,7 +240,7 @@ async function updateStatusOrder(req, res) {
     if (status == ORDER_STATUS.SUCCESS) {
       const orderItems = await order_item.findAll({ where: { order_id: foundOrder.id } });
       for (let i = 0; i < orderItems.length; i++) {
-        const foundStorage = await storage.findOne({ where: { product_id: orderItems[i].product_id } });
+        const foundStorage = await storage.findOne({ where: { product_price_id: orderItems[i].product_price_id } });
         const stock = Number(foundStorage.stock) - Number(orderItems[i].quantity);
         const issue = Number(foundStorage.issue) + Number(orderItems[i].quantity);
         if (stock < 0) {

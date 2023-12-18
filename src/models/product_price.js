@@ -72,6 +72,11 @@ product_price.associate = (db) => {
       name: 'product_id',
     },
   });
+  db.product_price.hasMany(db.order_item, {
+    foreignKey: {
+      name: 'product_price_id',
+    },
+  });
 };
 
 module.exports = () => product_price;

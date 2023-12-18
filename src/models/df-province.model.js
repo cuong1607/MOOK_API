@@ -2,9 +2,8 @@ const Sequelize = require('sequelize');
 const { Model } = Sequelize;
 const sequelize = require('../config/database');
 const { IS_ACTIVE } = require('@src/utils/constant');
-
-class order_item extends Model {}
-order_item.init(
+class df_province extends Model {}
+df_province.init(
   {
     id: {
       type: Sequelize.INTEGER,
@@ -12,25 +11,13 @@ order_item.init(
       primaryKey: true,
       autoIncrement: true,
     },
-    order_id: {
-      type: Sequelize.INTEGER,
+    name: {
+      type: Sequelize.TEXT,
       allowNull: true,
     },
-    product_price_id: {
-      type: Sequelize.INTEGER,
+    value: {
+      type: Sequelize.TEXT,
       allowNull: true,
-    },
-    quantity: {
-      type: Sequelize.INTEGER,
-      allowNull: true,
-    },
-    price: {
-      type: Sequelize.INTEGER,
-    },
-    is_active: {
-      type: Sequelize.INTEGER,
-      allowNull: false,
-      defaultValue: IS_ACTIVE.ACTIVE,
     },
     created_at: {
       type: Sequelize.DATE,
@@ -45,23 +32,11 @@ order_item.init(
   },
   {
     sequelize,
-    modelName: 'order_item',
+    modelName: 'df_province',
     freezeTableName: true,
     timestamps: false,
     paranoid: true,
   },
 );
 
-order_item.associate = (db) => {
-  db.order_item.belongsTo(db.order, {
-    foreignKey: {
-      name: 'order_id',
-    },
-  });
-  db.order_item.belongsTo(db.product_price, {
-    foreignKey: {
-      name: 'product_price_id',
-    },
-  });
-};
-module.exports = () => order_item;
+module.exports = () => df_province;

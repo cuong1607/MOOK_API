@@ -12,9 +12,9 @@ const supportMiddleware = [
 ];
 
 router
-  .get('/', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(orderController.getAllOrder))
-  .get('/:id', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(orderController.getDetailOrder))
-  .post('/', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(orderController.createOrder))
-  .patch('/:id/cancel', middleware.pagingMiddleware(), wrapHandlerWithJSONResponse(orderController.cancleOrder));
+  .get('/', supportMiddleware, wrapHandlerWithJSONResponse(orderController.getAllOrder))
+  .get('/:id', supportMiddleware, wrapHandlerWithJSONResponse(orderController.getDetailOrder))
+  .post('/', supportMiddleware, wrapHandlerWithJSONResponse(orderController.createOrder))
+  .patch('/:id/cancel', supportMiddleware, wrapHandlerWithJSONResponse(orderController.cancleOrder));
 
 module.exports = router;

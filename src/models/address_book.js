@@ -3,8 +3,8 @@ const { Model } = Sequelize;
 const sequelize = require('../config/database');
 const { IS_ACTIVE } = require('@src/utils/constant');
 
-class order_item extends Model {}
-order_item.init(
+class address_book extends Model {}
+address_book.init(
   {
     id: {
       type: Sequelize.INTEGER,
@@ -12,25 +12,33 @@ order_item.init(
       primaryKey: true,
       autoIncrement: true,
     },
+    name: {
+      type: Sequelize.TEXT,
+      allowNull: true,
+    },
+    phone_number: {
+      type: Sequelize.TEXT,
+      allowNull: true,
+    },
     order_id: {
       type: Sequelize.INTEGER,
-      allowNull: true,
+      allowNull: false,
     },
-    product_price_id: {
-      type: Sequelize.INTEGER,
-      allowNull: true,
-    },
-    quantity: {
-      type: Sequelize.INTEGER,
-      allowNull: true,
-    },
-    price: {
-      type: Sequelize.INTEGER,
-    },
-    is_active: {
+    df_province_id: {
       type: Sequelize.INTEGER,
       allowNull: false,
-      defaultValue: IS_ACTIVE.ACTIVE,
+    },
+    df_district_id: {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+    },
+    df_ward_id: {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+    },
+    address: {
+      type: Sequelize.TEXT,
+      allowNull: true,
     },
     created_at: {
       type: Sequelize.DATE,
@@ -45,23 +53,11 @@ order_item.init(
   },
   {
     sequelize,
-    modelName: 'order_item',
+    modelName: 'address_book',
     freezeTableName: true,
     timestamps: false,
     paranoid: true,
   },
 );
 
-order_item.associate = (db) => {
-  db.order_item.belongsTo(db.order, {
-    foreignKey: {
-      name: 'order_id',
-    },
-  });
-  db.order_item.belongsTo(db.product_price, {
-    foreignKey: {
-      name: 'product_price_id',
-    },
-  });
-};
-module.exports = () => order_item;
+module.exports = () => address_book;

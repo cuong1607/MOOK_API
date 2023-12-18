@@ -194,4 +194,13 @@ module.exports = Object.freeze({
     UPDATE_STORAGE: 2,
     COMPLETED_ORDER: 3,
   },
+  PAYMENT_METHOD: {
+    COD: 1,
+    BANKING: 2,
+  },
+  PAYMENT_STATUS: {
+    PENDING: 0,
+    COMPLETED: 1,
+    FAILED: 2,
+  },
 });

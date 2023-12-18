@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const { Model } = Sequelize;
 const sequelize = require('../config/database');
-const { IS_ACTIVE } = require('@src/utils/constant');
+const { IS_ACTIVE, PAYMENT_METHOD, ORDER_STATUS, PAYMENT_STATUS } = require('@src/utils/constant');
 
 class order extends Model {}
 order.init(
@@ -19,11 +19,18 @@ order.init(
     },
     status: {
       type: Sequelize.INTEGER,
-      defaultValue: 1,
+      defaultValue: ORDER_STATUS.PENDING,
+    },
+    payment_method: {
+      type: Sequelize.INTEGER,
+      defaultValue: PAYMENT_METHOD.COD,
+    },
+    payment_status: {
+      type: Sequelize.INTEGER,
+      defaultValue: PAYMENT_STATUS.PENDING,
     },
     note: {
       type: Sequelize.TEXT,
-      defaultValue: 1,
     },
     total_price: {
       type: Sequelize.INTEGER,
