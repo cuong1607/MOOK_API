@@ -1,5 +1,5 @@
 const db = require('../models');
-const { product, order, order_item, order_state, cart_item } = db;
+const { product, order, order_item, order_state, cart_item, product_price, color } = db;
 const { config, apiCode, IS_ACTIVE, ORDER_STATUS } = require('@utils/constant');
 const Joi = require('joi');
 const utils = require('@utils/util');
@@ -15,10 +15,21 @@ async function getAllCart(req, res) {
 
   const { rows, count } = await cart_item.findAndCountAll({
     where: whereCondition,
-    include: { model: product },
+    include: { model: product_price, include: { model: color } },
+    attributes: {
+      include: [
+        [
+          sequelize.literal(`(SELECT
+        name FROM product JOIN product_price ON product_price.product_id = product.id
+        WHERE product_price.id = cart_item.product_price_id
+        LIMIT 1
+      )`),
+          'product_name',
+        ],
+      ],
+    },
     limit,
     offset,
-    order: [['id', 'DESC']],
   });
   return { data: rows, paging: { page, count, limit } };
 }
@@ -29,7 +40,19 @@ async function getDetailCart(req, res) {
 
   const detail = await cart_item.findOne({
     where: whereCondition,
-    include: { model: product },
+    include: { model: product_price, include: { model: color } },
+    attributes: {
+      include: [
+        [
+          sequelize.literal(`(SELECT
+        name FROM product JOIN product_price ON product_price.product_id = product.id
+        WHERE product_price.id = cart_item.product_price_id
+        LIMIT 1
+      )`),
+          'product_name',
+        ],
+      ],
+    },
   });
   if (!detail) {
     throw apiCode.NOT_FOUND;
@@ -41,15 +64,15 @@ async function createCart(req, res) {
   const { auth } = req;
   const schema = Joi.object()
     .keys({
-      product_id: Joi.number().empty(''),
+      product_price_id: Joi.number().empty(''),
     })
     .unknown(true);
-  const { product_id } = await schema.validateAsync(req.body);
+  const { product_price_id } = await schema.validateAsync(req.body);
   const result = await sequelize.transaction(async (transaction) => {
     const cartCreated = await cart_item.create(
       {
         user_id: auth.id,
-        product_id,
+        product_price_id,
         quantity: 1,
       },
       { transaction },

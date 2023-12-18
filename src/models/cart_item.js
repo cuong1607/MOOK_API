@@ -16,7 +16,7 @@ cart_item.init(
       type: Sequelize.INTEGER,
       allowNull: true,
     },
-    product_id: {
+    product_price_id: {
       type: Sequelize.INTEGER,
       allowNull: true,
     },
@@ -49,9 +49,9 @@ cart_item.init(
   },
 );
 cart_item.associate = (db) => {
-  db.cart_item.belongsTo(db.product, {
+  db.cart_item.belongsTo(db.product_price, {
     foreignKey: {
-      name: 'product_id',
+      name: 'product_price_id',
     },
   });
 };

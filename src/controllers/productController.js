@@ -1,16 +1,5 @@
 const db = require('../models');
-const {
-  product,
-  category,
-  product_color,
-  product_image,
-  product_size,
-  price_group,
-  storage,
-  storage_transaction,
-  product_price,
-  branch,
-} = db;
+const { product, category, product_image, price_group, storage, storage_transaction, product_price, branch } = db;
 const { config, apiCode, IS_ACTIVE, STORAGE_TYPE, STORAGE_CHANGE_TYPE } = require('@utils/constant');
 const Joi = require('joi');
 const { Op } = require('sequelize');
@@ -21,8 +10,8 @@ async function getAllProduct(req, res) {
   const { page = 1, limit = config.PAGING_LIMIT, offset = 0 } = req.query;
   const schema = Joi.object()
     .keys({
-      category_id: Joi.number().empty(''),
-      branch_id: Joi.number().empty(''),
+      category_id: Joi.string().empty(''),
+      branch_id: Joi.string().empty(''),
       price_group_id: Joi.number(),
       color_ids: Joi.string(),
       size_ids: Joi.string(),
@@ -32,10 +21,10 @@ async function getAllProduct(req, res) {
 
   const { category_id, search, branch_id, color_ids, price_group_id } = await schema.validateAsync(req.query);
   if (category_id) {
-    whereCondition.category_id = category_id;
+    whereCondition.category_id = { [Op.in]: category_id.split(',') };
   }
   if (branch_id) {
-    whereCondition.branch_id = branch_id;
+    whereCondition.branch_id = { [Op.in]: branch_id.split(',') };
   }
   if (search) {
     whereCondition.name = { [Op.substring]: search };
@@ -51,9 +40,15 @@ async function getAllProduct(req, res) {
   }
   if (price_group_id) {
     const priceGroup = await price_group.findOne({ where: { id: price_group_id } });
-    whereCondition.price = {
-      [Op.and]: [{ [Op.gte]: priceGroup.min_price }, { [Op.lte]: priceGroup.max_price }],
-    };
+    const foundProductPrice = await product_price.findAll({
+      where: {
+        price: {
+          [Op.and]: [{ [Op.gte]: priceGroup.min_price }, { [Op.lte]: priceGroup.max_price }],
+        },
+      },
+    });
+    const productIDs = foundProductPrice.map((e) => e.product_id);
+    whereCondition[Op.and].push({ id: { [Op.in]: productIDs } });
   }
   const count = await product.count({ where: whereCondition });
   const { rows } = await product.findAndCountAll({
