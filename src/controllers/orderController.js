@@ -1,5 +1,5 @@
 const db = require('../models');
-const { product, order, order_item, order_state, cart_item, product_price } = db;
+const { product, order, order_item, order_state, cart_item, product_price, address_book } = db;
 const { config, apiCode, IS_ACTIVE, ORDER_STATUS } = require('@utils/constant');
 const Joi = require('joi');
 const utils = require('@utils/util');
@@ -109,7 +109,11 @@ async function createOrder(req, res) {
       payment_method: Joi.number().required(),
     })
     .unknown(true);
-  const { note, cart_items, payment_method } = await schema.validateAsync(req.body);
+  const { note, cart_items, payment_method, name, phone_number,
+    df_province_id,
+    df_district_id,
+    df_ward_id,
+    address } = await schema.validateAsync(req.body);
   const orderItemCreated = [];
   let total_payment = 0;
 
@@ -159,6 +163,16 @@ async function createOrder(req, res) {
       },
       { transaction },
     );
+    await address_book.create( {
+      order_id: orderCreated.id,
+      name: name,
+      phone_number: phone_number,
+      df_province_id: df_province_id,
+      df_district_id: df_district_id,
+      df_ward_id: df_ward_id,
+      address: address,
+    },
+    { transaction },)
     return orderCreated;
   });
   return result;
