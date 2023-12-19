@@ -75,5 +75,10 @@ order.associate = (db) => {
       name: 'user_id',
     },
   });
+  db.order.hasOne(db.address_book, {
+    foreignKey: {
+      name: 'order_id',
+    },
+  });
 };
 module.exports = () => order;

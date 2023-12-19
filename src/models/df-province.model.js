@@ -39,4 +39,12 @@ df_province.init(
   },
 );
 
+df_province.associate = (db) => {
+  db.df_province.hasMany(db.address_book, {
+    foreignKey: {
+      name: 'df_province_id',
+    },
+  });
+};
+
 module.exports = () => df_province;

@@ -59,5 +59,26 @@ address_book.init(
     paranoid: true,
   },
 );
-
+address_book.associate = (db) => {
+  db.address_book.belongsTo(db.order, {
+    foreignKey: {
+      name: 'order_id',
+    },
+  });
+  db.address_book.belongsTo(db.df_province, {
+    foreignKey: {
+      name: 'df_province_id',
+    },
+  });
+  db.address_book.belongsTo(db.df_district, {
+    foreignKey: {
+      name: 'df_district_id',
+    },
+  });
+  db.address_book.belongsTo(db.df_ward, {
+    foreignKey: {
+      name: 'df_ward_id',
+    },
+  });
+};
 module.exports = () => address_book;

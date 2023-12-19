@@ -42,5 +42,11 @@ df_ward.init(
     paranoid: true,
   },
 );
-
+df_ward.associate = (db) => {
+  db.df_ward.hasMany(db.address_book, {
+    foreignKey: {
+      name: 'df_ward_id',
+    },
+  });
+};
 module.exports = () => df_ward;

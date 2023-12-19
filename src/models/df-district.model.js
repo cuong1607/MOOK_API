@@ -42,5 +42,11 @@ df_district.init(
     paranoid: true,
   },
 );
-
+df_district.associate = (db) => {
+  db.df_district.hasMany(db.address_book, {
+    foreignKey: {
+      name: 'df_district_id',
+    },
+  });
+};
 module.exports = () => df_district;

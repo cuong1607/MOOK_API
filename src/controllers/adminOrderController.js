@@ -1,5 +1,18 @@
 const db = require('../models');
-const { product, order, order_item, order_state, user, product_image, storage, storage_transaction } = db;
+const {
+  product,
+  order,
+  order_item,
+  order_state,
+  user,
+  product_image,
+  storage,
+  storage_transaction,
+  address_book,
+  df_province,
+  df_district,
+  df_ward,
+} = db;
 const {
   config,
   apiCode,
@@ -119,6 +132,10 @@ async function getDetailOrder(req, res) {
           'user_name',
           [sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar'],
         ],
+      },
+      {
+        model: address_book,
+        include: [{ model: df_province }, { model: df_district }, { model: df_ward }],
       },
     ],
     order: [[db.order_state, 'id', 'ASC']],
