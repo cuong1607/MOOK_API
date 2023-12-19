@@ -77,6 +77,40 @@ async function getAllOrder(req, res) {
           ],
         },
       },
+      {
+        model: address_book,
+        attributes: {
+          include: [
+            [
+              sequelize.literal(`(SELECT df_province.name
+                FROM address_book
+                JOIN df_province ON address_book.df_province_id = df_province.id
+                WHERE address_book.id = address_book.id
+            LIMIT 1
+          )`),
+              'df_provinc_name',
+            ],
+            [
+              sequelize.literal(`(SELECT df_district.name
+                FROM address_book
+                JOIN df_district ON address_book.df_district_id = df_district.id
+                WHERE address_book.id = address_book.id
+            LIMIT 1
+          )`),
+              'df_district_name',
+            ],
+            [
+              sequelize.literal(`(SELECT df_ward.name
+                FROM address_book
+                JOIN df_ward ON address_book.df_ward_id = df_ward.id
+                WHERE address_book.id = address_book.id
+            LIMIT 1
+          )`),
+              'df_ward_name',
+            ],
+          ],
+        },
+      },
     ],
     limit,
     offset,
