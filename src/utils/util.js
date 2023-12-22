@@ -14,8 +14,18 @@ function getFullUrl(path) {
   }
   return path;
 }
+
+function convertDateToUTC(fromDateInput, toDateInput) {
+  const fDate = Date.parse(fromDateInput);
+  const tDate = Date.parse(toDateInput);
+  const fromDate = new Date(fDate - 7 * 60 * 60 * 1000);
+  const toDate = new Date(tDate + 86400000 - 7 * 60 * 60 * 1000);
+  return { fromDate, toDate };
+}
+
 module.exports = {
   generateCode,
   getFullUrl,
   getUrl: () => `${SERVER_URL}/`,
+  convertDateToUTC,
 };

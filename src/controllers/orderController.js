@@ -10,8 +10,10 @@ const {
   df_province,
   df_district,
   df_ward,
+  storage,
+  storage_transaction,
 } = db;
-const { config, apiCode, IS_ACTIVE, ORDER_STATUS } = require('@utils/constant');
+const { config, apiCode, IS_ACTIVE, ORDER_STATUS, STORAGE_TYPE, STORAGE_CHANGE_TYPE } = require('@utils/constant');
 const Joi = require('joi');
 const utils = require('@utils/util');
 const sequelize = require('@config/database');
@@ -190,7 +192,51 @@ async function createOrder(req, res) {
       }));
       const orderCode = utils.generateCode(orderCreated.id);
       await orderCreated.update({ code: orderCode }, { transaction });
-      await order_item.bulkCreate(itemCreated, { transaction });
+      for (let index = 0; index < orderItemCreated.length; index++) {
+        console.log('index', index);
+        const foundStorage = await storage.findOne({
+          where: { product_price_id: orderItemCreated[index].product_price_id },
+        });
+        const stock = Number(foundStorage.stock) - Number(orderItemCreated[index].quantity);
+        const issue = Number(foundStorage.issue) + Number(orderItemCreated[index].quantity);
+        await foundStorage.update(
+          {
+            stock,
+            issue,
+          },
+          { transaction },
+        );
+        await storage_transaction.create(
+          {
+            storage_id: foundStorage.id,
+            type: STORAGE_TYPE.SUB,
+            storage_change_type_id: STORAGE_CHANGE_TYPE.COMPLETED_ORDER,
+            amount: Number(orderItemCreated[index].quantity),
+            stock,
+          },
+          { transaction },
+        );
+        await product_price.update(
+          {
+            amount: stock,
+          },
+          {
+            where: {
+              id: orderItemCreated[index].product_price_id,
+            },
+            transaction,
+          },
+        );
+        await order_item.create(
+          {
+            order_id: orderCreated.id,
+            product_price_id: orderItemCreated[index].product_price_id,
+            quantity: orderItemCreated[index].quantity,
+            price: orderItemCreated[index].price,
+          },
+          { transaction },
+        );
+      }
       await order_state.create(
         {
           order_id: orderCreated.id,
@@ -247,7 +293,51 @@ async function createOrder(req, res) {
       }));
       const orderCode = utils.generateCode(orderCreated.id);
       await orderCreated.update({ code: orderCode }, { transaction });
-      await order_item.bulkCreate(itemCreated, { transaction });
+      for (let index = 0; index < orderItemCreated.length; index++) {
+        console.log('index', index);
+        const foundStorage = await storage.findOne({
+          where: { product_price_id: orderItemCreated[index].product_price_id },
+        });
+        const stock = Number(foundStorage.stock) - Number(orderItemCreated[index].quantity);
+        const issue = Number(foundStorage.issue) + Number(orderItemCreated[index].quantity);
+        await foundStorage.update(
+          {
+            stock,
+            issue,
+          },
+          { transaction },
+        );
+        await storage_transaction.create(
+          {
+            storage_id: foundStorage.id,
+            type: STORAGE_TYPE.SUB,
+            storage_change_type_id: STORAGE_CHANGE_TYPE.COMPLETED_ORDER,
+            amount: Number(orderItemCreated[index].quantity),
+            stock,
+          },
+          { transaction },
+        );
+        await product_price.update(
+          {
+            amount: stock,
+          },
+          {
+            where: {
+              id: orderItemCreated[index].product_price_id,
+            },
+            transaction,
+          },
+        );
+        await order_item.create(
+          {
+            order_id: orderCreated.id,
+            product_price_id: orderItemCreated[index].product_price_id,
+            quantity: orderItemCreated[index].quantity,
+            price: orderItemCreated[index].price,
+          },
+          { transaction },
+        );
+      }
       await order_state.create(
         {
           order_id: orderCreated.id,
@@ -284,6 +374,12 @@ async function cancleOrder(req, res) {
   if (foundOrder.user_id != auth.id) {
     throw new Error('Đơn hàng không phải của bạn');
   }
+  const orderItems = await order_item.findAll({
+    where: {
+      order_id: id,
+      is_active: IS_ACTIVE.ACTIVE,
+    },
+  });
   const result = await sequelize.transaction(async (transaction) => {
     await foundOrder.update(
       {
@@ -292,10 +388,48 @@ async function cancleOrder(req, res) {
       },
       { transaction },
     );
-    await order_state.create({
-      order_id: foundOrder.id,
-      status: ORDER_STATUS.CANCELED,
-    });
+    await order_state.create(
+      {
+        order_id: foundOrder.id,
+        status: ORDER_STATUS.CANCELED,
+      },
+      { transaction },
+    );
+    for (let index = 0; index < orderItems.length; index++) {
+      const foundStorage = await storage.findOne({
+        where: { product_price_id: orderItems[index].product_price_id },
+      });
+      const stock = Number(foundStorage.stock) + Number(orderItems[index].quantity);
+      const issue = Number(foundStorage.issue) - Number(orderItems[index].quantity);
+      await foundStorage.update(
+        {
+          stock,
+          issue,
+        },
+        { transaction },
+      );
+      await storage_transaction.create(
+        {
+          storage_id: foundStorage.id,
+          type: STORAGE_TYPE.ADD,
+          storage_change_type_id: STORAGE_CHANGE_TYPE.REFUND_ORDER,
+          amount: Number(orderItems[index].quantity),
+          stock,
+        },
+        { transaction },
+      );
+      await product_price.update(
+        {
+          amount: stock,
+        },
+        {
+          where: {
+            id: orderItems[index].product_price_id,
+          },
+          transaction,
+        },
+      );
+    }
   });
 
   await foundOrder.reload();

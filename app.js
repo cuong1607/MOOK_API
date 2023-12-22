@@ -28,6 +28,7 @@ const productPriceRouter = require('@routes/productPriceRoutes');
 const provinceRouter = require('@routes/provinceRoutes');
 const districtRouter = require('@routes/districtRoutes');
 const wardRouter = require('@routes/wardRoutes');
+const overviewRouter = require('@routes/overviewRoutes');
 
 const db = require('./src/models/index');
 var app = express();
@@ -67,6 +68,7 @@ app.use('/product-price', productPriceRouter);
 app.use('/province', provinceRouter);
 app.use('/district', districtRouter);
 app.use('/ward', wardRouter);
+app.use('/overview', overviewRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

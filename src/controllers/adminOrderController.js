@@ -12,6 +12,7 @@ const {
   df_province,
   df_district,
   df_ward,
+  product_price,
 } = db;
 const {
   config,
@@ -254,15 +255,12 @@ async function updateStatusOrder(req, res) {
     throw apiCode.NOT_FOUND;
   }
   const result = await sequelize.transaction(async (transaction) => {
-    if (status == ORDER_STATUS.SUCCESS) {
+    if (status == ORDER_STATUS.DENY) {
       const orderItems = await order_item.findAll({ where: { order_id: foundOrder.id } });
       for (let i = 0; i < orderItems.length; i++) {
         const foundStorage = await storage.findOne({ where: { product_price_id: orderItems[i].product_price_id } });
-        const stock = Number(foundStorage.stock) - Number(orderItems[i].quantity);
-        const issue = Number(foundStorage.issue) + Number(orderItems[i].quantity);
-        if (stock < 0) {
-          throw apiCode.PRODUCT_NOT_ENOUGH;
-        }
+        const stock = Number(foundStorage.stock) + Number(orderItems[i].quantity);
+        const issue = Number(foundStorage.issue) - Number(orderItems[i].quantity);
         await foundStorage.update(
           {
             stock,
@@ -273,12 +271,23 @@ async function updateStatusOrder(req, res) {
         await storage_transaction.create(
           {
             storage_id: foundStorage.id,
-            type: STORAGE_TYPE.SUB,
-            storage_change_type_id: STORAGE_CHANGE_TYPE.COMPLETED_ORDER,
+            type: STORAGE_TYPE.ADD,
+            storage_change_type_id: STORAGE_CHANGE_TYPE.REFUND_ORDER,
             amount: Number(orderItems[i].quantity),
             stock,
           },
           { transaction },
+        );
+        await product_price.update(
+          {
+            amount: stock,
+          },
+          {
+            where: {
+              id: orderItems[i].product_price_id,
+            },
+            transaction,
+          },
         );
       }
     }

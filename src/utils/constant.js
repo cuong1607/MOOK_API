@@ -193,6 +193,7 @@ module.exports = Object.freeze({
     CREATE_STORAGE: 1,
     UPDATE_STORAGE: 2,
     COMPLETED_ORDER: 3,
+    REFUND_ORDER: 4,
   },
   PAYMENT_METHOD: {
     COD: 1,
