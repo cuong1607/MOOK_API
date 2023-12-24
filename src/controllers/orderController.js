@@ -161,13 +161,13 @@ async function createOrder(req, res) {
       throw apiCode.NOT_FOUND;
     }
     for (let i = 0; i < foundCart.length; i++) {
-      const price = foundCart[i].product_price.price;
+      // const price = foundCart[i].product_price.price;
       const discount = foundCart[i].product_price.discount || 0;
-      total_payment = total_payment + (Number(price) - Number(discount)) * Number(foundCart[i].quantity);
+      total_payment =  Number(discount) * Number(foundCart[i].quantity);
       orderItemCreated.push({
         product_price_id: foundCart[i].product_price_id,
         quantity: foundCart[i].quantity,
-        price: Number(price) - Number(discount),
+        price: Number(discount),
       });
     }
     result = await sequelize.transaction(async (transaction) => {
@@ -266,13 +266,13 @@ async function createOrder(req, res) {
           id: list_product[i].product_price_id,
         },
       });
-      const price = productPrice.price;
+      // const price = productPrice.price;
       const discount = productPrice.discount || 0;
-      total_payment = total_payment + (Number(price) - Number(discount)) * Number(list_product[i].quantity);
+      total_payment = total_payment + Number(discount) * Number(list_product[i].quantity);
       orderItemCreated.push({
         product_price_id: list_product[i].product_price_id,
         quantity: list_product[i].quantity,
-        price: Number(price) - Number(discount),
+        price: Number(discount),
       });
     }
     result = await sequelize.transaction(async (transaction) => {

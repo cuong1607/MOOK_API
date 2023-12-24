@@ -15,22 +15,22 @@ async function uploadSingleFile(req, res) {
   return { filename: req.file.filename, url: utils.getFullUrl(relPath), path: `${relPath}` };
 }
 
-async function uploadMultipleFile(req, res) {
-  const { id } = req.params;
-  await uploadMiddleware.handleFiles(req, 'file', id);
-  let return_arr = [];
+// async function uploadMultipleFile(req, res) {
+//   const { id } = req.params;
+//   await uploadMiddleware.handleFiles(req, 'file', id);
+//   let return_arr = [];
 
-  if (req.files) {
-    req.files.forEach((file) => {
-      return_arr.push({
-        filename: file.filename,
-        url: utils.getFullUrl(file.path),
-        path: `${file.path}`,
-      });
-    });
-  }
-  return return_arr;
-}
+//   if (req.files) {
+//     req.files.forEach((file) => {
+//       return_arr.push({
+//         filename: file.filename,
+//         url: utils.getFullUrl(file.path),
+//         path: `${file.path}`,
+//       });
+//     });
+//   }
+//   return return_arr;
+// }
 
 module.exports = {
   uploadSingleFile,
