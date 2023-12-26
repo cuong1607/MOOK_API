@@ -4,7 +4,7 @@ require('dotenv').config();
 const env = {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || 'Trungkien97@',
+  password: process.env.DB_PASSWORD || '123456',
   database: process.env.DB_NAME || 'base_nestjs',
   port: process.env.DB_PORT || '3306',
 };

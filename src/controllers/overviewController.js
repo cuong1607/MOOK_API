@@ -31,6 +31,7 @@ async function getAllOverview(req, res) {
     attributes: [
       'id',
       'full_name',
+      'phone',
       'email',
       [sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar'],
     ],

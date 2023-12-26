@@ -34,5 +34,5 @@ async function uploadSingleFile(req, res) {
 
 module.exports = {
   uploadSingleFile,
-  uploadMultipleFile,
+  // uploadMultipleFile,
 };

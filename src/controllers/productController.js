@@ -15,11 +15,12 @@ async function getAllProduct(req, res) {
       price_group_id: Joi.number(),
       color_ids: Joi.string(),
       size_ids: Joi.string(),
+      sort: Joi.string().empty(''),
     })
     .unknown(true);
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE, [Op.and]: [] };
 
-  const { category_id, search, branch_id, color_ids, price_group_id } = await schema.validateAsync(req.query);
+  const { category_id, search, branch_id, color_ids, price_group_id, sort } = await schema.validateAsync(req.query);
   if (category_id) {
     whereCondition.category_id = { [Op.in]: category_id.split(',') };
   }
@@ -50,9 +51,20 @@ async function getAllProduct(req, res) {
     const productIDs = foundProductPrice.map((e) => e.product_id);
     whereCondition[Op.and].push({ id: { [Op.in]: productIDs } });
   }
+  let order = 'asc';
+  // if (sort === 'desc') {
+  //   order = 'desc';
+  //   whereCondition[Op.and].push({ sort: 'desc' });
+  // }
+  if (order === 'desc') {
+    order = 'desc';
+    // whereCondition.order = { [Op.in]: order.split(',') };
+    whereCondition.sort = { [Op.in]: order };
+  }
   const count = await product.count({ where: whereCondition });
   const { rows } = await product.findAndCountAll({
     where: whereCondition,
+    // order: [['created_at', order]],
     include: [
       {
         model: product_image,
@@ -184,10 +196,6 @@ async function createProduct(req, res) {
       },
       { transaction },
     );
-    // const productColorCreated = color_ids.map((e) => ({ product_id: productCreated.id, color_id: e }));
-    // await product_color.bulkCreate(productColorCreated, { transaction });
-    // const productSizeCreated = size_ids.map((e) => ({ product_id: productCreated.id, size_id: e }));
-    // await product_size.bulkCreate(productSizeCreated, { transaction });
     const productImageCreated = images.map((e) => ({ product_id: productCreated.id, path: e }));
     await product_image.bulkCreate(productImageCreated, { transaction });
 
