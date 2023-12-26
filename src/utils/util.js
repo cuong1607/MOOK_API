@@ -6,7 +6,7 @@ function generateCode(id) {
 let SERVER_URL = process.env.BASE_API_URL || '';
 function getFullUrl(path) {
   if (!path) {
-    return null;
+    return '';
   }
 
   if (!path.startsWith('http')) {

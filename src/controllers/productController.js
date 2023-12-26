@@ -5,6 +5,7 @@ const Joi = require('joi');
 const { Op } = require('sequelize');
 const sequelize = require('@config/database');
 const utils = require('@utils/util');
+const { path } = require('@root/app');
 async function getAllProduct(req, res) {
   const { auth } = req;
   const { page = 1, limit = config.PAGING_LIMIT, offset = 0 } = req.query;
@@ -14,7 +15,7 @@ async function getAllProduct(req, res) {
       branch_id: Joi.string().empty(''),
       price_group_id: Joi.number(),
       color_ids: Joi.string(),
-      size_ids: Joi.string(),
+      // size_ids: Joi.string(),
       sort: Joi.string().empty(''),
     })
     .unknown(true);
@@ -126,7 +127,9 @@ async function getDetailProduct(req, res) {
       {
         model: product_image,
         attributes: {
-          include: [[sequelize.literal(`IF(LENGTH(path) > 0,CONCAT ('${utils.getUrl()}',path), path)`), 'path']],
+          include: [
+            [sequelize.literal(`IF(LENGTH(path) > 0,CONCAT ('${utils.getFullUrl(path)}',path), path)`), 'path'],
+          ],
         },
       },
       {
@@ -170,7 +173,7 @@ async function createProduct(req, res) {
       branch_id: Joi.number().empty('').required(),
       name: Joi.string().empty('').required(),
       code: Joi.string().empty('').required(),
-      description: Joi.string(),
+      description: Joi.string().empty('').allow(null),
       images: Joi.array().required(),
       product_prices: Joi.array(),
     })
@@ -243,7 +246,7 @@ async function updateProduct(req, res) {
       status: Joi.number().empty('').required(),
       images: Joi.array().required(),
       color_ids: Joi.array().required(),
-      size_ids: Joi.array().required(),
+      // size_ids: Joi.array().required(),
     })
     .unknown(true);
   const { category_id, name, code, description, status, images } = await schema.validateAsync(req.body);
