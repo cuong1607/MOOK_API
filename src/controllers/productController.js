@@ -16,12 +16,15 @@ async function getAllProduct(req, res) {
       price_group_id: Joi.number(),
       color_ids: Joi.string(),
       // size_ids: Joi.string(),
+      order: Joi.string().empty(''),
       sort: Joi.string().empty(''),
     })
     .unknown(true);
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE, [Op.and]: [] };
 
-  const { category_id, search, branch_id, color_ids, price_group_id, sort } = await schema.validateAsync(req.query);
+  const { category_id, search, branch_id, color_ids, price_group_id, sort, order } = await schema.validateAsync(
+    req.query,
+  );
   if (category_id) {
     whereCondition.category_id = { [Op.in]: category_id.split(',') };
   }
@@ -52,20 +55,45 @@ async function getAllProduct(req, res) {
     const productIDs = foundProductPrice.map((e) => e.product_id);
     whereCondition[Op.and].push({ id: { [Op.in]: productIDs } });
   }
-  let order = 'asc';
-  // if (sort === 'desc') {
-  //   order = 'desc';
-  //   whereCondition[Op.and].push({ sort: 'desc' });
-  // }
-  if (order === 'desc') {
-    order = 'desc';
-    // whereCondition.order = { [Op.in]: order.split(',') };
-    whereCondition.sort = { [Op.in]: order };
+  const orderQuery = [];
+  if (order == 'asc') {
+    orderQuery.push(['created_at', 'ASC']);
+  } else {
+    orderQuery.push(['created_at', 'DESC']);
   }
+  if (sort == 'asc') {
+    orderQuery.push([
+      sequelize.literal(`(SELECT
+  MIN(price) FROM product_price
+  where product_id = product.id
+  LIMIT 1)`),
+      'ASC',
+    ]);
+  } else {
+    orderQuery.push([
+      sequelize.literal(`(SELECT
+  MIN(price) FROM product_price
+  where product_id = product.id
+  LIMIT 1)`),
+      'DESC',
+    ]);
+  }
+  console.log('orderQuery', orderQuery);
   const count = await product.count({ where: whereCondition });
   const { rows } = await product.findAndCountAll({
     where: whereCondition,
-    // order: [['created_at', order]],
+    attributes: {
+      include: [
+        [
+          sequelize.literal(`(SELECT
+            MIN(price) FROM product_price
+            where product_id = product.id
+            LIMIT 1
+          )`),
+          'min_price',
+        ],
+      ],
+    },
     include: [
       {
         model: product_image,
@@ -111,7 +139,7 @@ async function getAllProduct(req, res) {
 
     limit,
     offset,
-    order: [['id', 'DESC']],
+    order: orderQuery,
   });
   return { data: rows, paging: { page, count: count, limit } };
 }

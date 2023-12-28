@@ -14,7 +14,7 @@ const supportMiddleware = [
 router
   .get('/', supportMiddleware, wrapHandlerWithJSONResponse(orderController.getAllOrder))
   .get('/:id', supportMiddleware, wrapHandlerWithJSONResponse(orderController.getDetailOrder))
-  .post('/', wrapHandlerWithJSONResponse(orderController.createOrder))
+  .post('/',supportMiddleware, wrapHandlerWithJSONResponse(orderController.createOrder))
   .patch('/:id/cancel', supportMiddleware, wrapHandlerWithJSONResponse(orderController.cancleOrder));
 
 module.exports = router;
