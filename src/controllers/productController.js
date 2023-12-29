@@ -56,11 +56,6 @@ async function getAllProduct(req, res) {
     whereCondition[Op.and].push({ id: { [Op.in]: productIDs } });
   }
   const orderQuery = [];
-  if (order == 'asc') {
-    orderQuery.push(['created_at', 'ASC']);
-  } else {
-    orderQuery.push(['created_at', 'DESC']);
-  }
   if (sort == 'asc') {
     orderQuery.push([
       sequelize.literal(`(SELECT
@@ -77,6 +72,11 @@ async function getAllProduct(req, res) {
   LIMIT 1)`),
       'DESC',
     ]);
+  }
+  if (order == 'asc') {
+    orderQuery.push(['created_at', 'ASC']);
+  } else {
+    orderQuery.push(['created_at', 'DESC']);
   }
   console.log('orderQuery', orderQuery);
   const count = await product.count({ where: whereCondition });
