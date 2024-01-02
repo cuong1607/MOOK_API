@@ -22,9 +22,12 @@ async function getAllProduct(req, res) {
     .unknown(true);
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE, [Op.and]: [] };
 
-  const { category_id, search, branch_id, color_ids, price_group_id, sort, order } = await schema.validateAsync(
+  const { category_id, search, branch_id, color_ids, price_group_id, sort, order, status } = await schema.validateAsync(
     req.query,
   );
+  if (status) {
+    whereCondition.status = status;
+  }
   if (category_id) {
     whereCondition.category_id = { [Op.in]: category_id.split(',') };
   }

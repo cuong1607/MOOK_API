@@ -25,6 +25,11 @@ branch.init(
       allowNull: false,
       defaultValue: IS_ACTIVE.ACTIVE,
     },
+    status: {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+      defaultValue: IS_ACTIVE.ACTIVE,
+    },
     created_at: {
       type: Sequelize.DATE,
       allowNull: false,

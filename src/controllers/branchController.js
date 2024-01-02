@@ -7,9 +7,13 @@ const { Op } = require('sequelize');
 
 async function getAllBranch(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
+  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, status } = req.query;
+  const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
+  if (status) {
+    whereCondition.status = status;
+  }
   const { rows, count } = await branch.findAndCountAll({
-    where: { is_active: IS_ACTIVE.ACTIVE },
+    where: whereCondition,
     limit,
     offset,
     order: [['id', 'DESC']],
@@ -56,9 +60,10 @@ async function updateBranch(req, res) {
     .keys({
       name: Joi.string().empty('').required(),
       description: Joi.string().empty(''),
+      status: Joi.number().empty(''),
     })
     .unknown(true);
-  const { name, description } = await schema.validateAsync(req.body);
+  const { name, description, status } = await schema.validateAsync(req.body);
   const { id } = req.params;
   const foundBranch = await branch.findOne({
     where: { id },
@@ -75,6 +80,7 @@ async function updateBranch(req, res) {
   await foundBranch.update({
     name,
     description,
+    status,
     updated_at: new Date(),
   });
   await foundBranch.reload();
