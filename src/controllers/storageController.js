@@ -4,11 +4,15 @@ const { config, apiCode, IS_ACTIVE, STORAGE_TYPE, STORAGE_CHANGE_TYPE } = requir
 const Joi = require('joi');
 const { Op } = require('sequelize');
 const sequelize = require('@config/database');
+const utils = require('@utils/util');
 
 async function getAllStorage(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
-  const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
+  let { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, from_date, to_date } = req.query;
+  if (!from_date) from_date = 0;
+  if (!to_date) to_date = new Date(Date.now());
+  const performDate = await utils.convertDateToUTC(from_date, to_date);
+  const whereCondition = { is_active: IS_ACTIVE.ACTIVE, created_at: { [Op.and]: [{ [Op.lte]: performDate.toDate }, { [Op.gte]: performDate.fromDate }] } };
   // if (search) {
   //   whereCondition.product_name = { [Op.substring]: search };
   // }

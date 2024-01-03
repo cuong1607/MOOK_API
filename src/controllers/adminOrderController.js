@@ -26,20 +26,23 @@ const {
 const Joi = require('joi');
 const utils = require('@utils/util');
 const sequelize = require('@config/database');
-
+const { Op } = require('sequelize');
 async function getAllOrder(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status, payment_method } = req.query;
-  const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
+  let { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status, payment_method, from_date, to_date } = req.query;
+  if (!from_date) from_date = 0;
+  if (!to_date) to_date = new Date(Date.now());
+  const performDate = await utils.convertDateToUTC(from_date, to_date);
+  const whereCondition = { is_active: IS_ACTIVE.ACTIVE, created_at: { [Op.and]: [{ [Op.lte]: performDate.toDate }, { [Op.gte]: performDate.fromDate }] } };
   if (status) {
     whereCondition.status = status;
   }
   if (payment_method) {
     whereCondition.payment_method = payment_method;
   }
-  // if (search) {
-  //   whereCondition.code = { [Op.substring]: search };
-  // }
+  if (search) {
+    whereCondition.code = { [Op.substring]: search };
+  }
   const { rows, count } = await order.findAndCountAll({
     where: whereCondition,
     include: [

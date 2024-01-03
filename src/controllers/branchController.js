@@ -8,7 +8,7 @@ const utils = require('@utils/util');
 
 async function getAllBranch(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, status } = req.query;
+  let { page = 1, limit = config.PAGING_LIMIT, offset = 0, status, from_date, to_date } = req.query;
   if (!from_date) from_date = 0;
   if (!to_date) to_date = new Date(Date.now());
   const performDate = await utils.convertDateToUTC(from_date, to_date);

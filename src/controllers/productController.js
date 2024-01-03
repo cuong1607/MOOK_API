@@ -8,7 +8,7 @@ const utils = require('@utils/util');
 const { path } = require('@root/app');
 async function getAllProduct(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0 } = req.query;
+  let { page = 1, limit = config.PAGING_LIMIT, offset = 0, from_date, to_date } = req.query;
   const schema = Joi.object()
     .keys({
       category_id: Joi.string().empty(''),
@@ -20,7 +20,10 @@ async function getAllProduct(req, res) {
       sort: Joi.string().empty(''),
     })
     .unknown(true);
-  const whereCondition = { is_active: IS_ACTIVE.ACTIVE, [Op.and]: [] };
+  if (!from_date) from_date = 0;
+  if (!to_date) to_date = new Date(Date.now());
+  const performDate = await utils.convertDateToUTC(from_date, to_date);
+  const whereCondition = { is_active: IS_ACTIVE.ACTIVE, created_at: { [Op.and]: [{ [Op.lte]: performDate.toDate }, { [Op.gte]: performDate.fromDate }] }, [Op.and]: [] };
 
   const { category_id, search, branch_id, color_ids, price_group_id, sort, order, status } = await schema.validateAsync(
     req.query,

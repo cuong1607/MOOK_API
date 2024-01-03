@@ -9,19 +9,19 @@ const sequelize = require('@config/database');
 
 async function getAllUser(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, from_date, to_date } = req.query;
-  // if (search) {
-  //   whereCondition.name = { [Op.substring]: search };
-  // }
+  let { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, from_date, to_date, role_id } = req.query;
   if (!from_date) from_date = 0;
   if (!to_date) to_date = new Date(Date.now());
   const performDate = await utils.convertDateToUTC(from_date, to_date);
+  const whereCondition = { is_active: IS_ACTIVE.ACTIVE, id: { [Op.ne]: auth.id }, created_at: { [Op.and]: [{ [Op.lte]: performDate.toDate }, { [Op.gte]: performDate.fromDate }] }, [Op.and]: [] };
+  if (search) {
+    whereCondition.full_name = { [Op.substring]: search };
+  }
+  if (role_id) {
+    whereCondition.role_id = { [Op.substring]: role_id };
+  }
   const { rows, count } = await user.findAndCountAll({
-    where: {
-      is_active: IS_ACTIVE.ACTIVE,
-      id: { [Op.ne]: auth.id },
-      created_at: { [Op.and]: [{ [Op.lte]: performDate.toDate }, { [Op.gte]: performDate.fromDate }] },
-    },
+    where: whereCondition,
     attributes: {
       include: [[sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar']],
     },

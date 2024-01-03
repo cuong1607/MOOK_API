@@ -4,17 +4,19 @@ const { config, ROLE, apiCode, IS_ACTIVE, AppError } = require('@utils/constant'
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
+const utils = require('@utils/util');
 
 async function getAllColor(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status } = req.query;
-  // if (!from_date) from_date = 0;
-  // if (!to_date) to_date = new Date(Date.now());
-  // const performDate = await utils.convertDateToUTC(from_date, to_date);
+  let { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status, from_date, to_date } = req.query;
+  if (!from_date) from_date = 0;
+  if (!to_date) to_date = new Date(Date.now());
+  const performDate = await utils.convertDateToUTC(from_date, to_date);
 
   const whereCondition = {
     is_active: IS_ACTIVE.ACTIVE,
     [Op.and]: [],
+    created_at: { [Op.and]: [{ [Op.lte]: performDate.toDate }, { [Op.gte]: performDate.fromDate }] },
   };
 
   if (status) {
