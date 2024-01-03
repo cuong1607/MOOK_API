@@ -16,6 +16,7 @@ router
   .get('/:id', supportMiddleware, wrapHandlerWithJSONResponse(userController.getDetailUser))
   .post('/', supportMiddleware, wrapHandlerWithJSONResponse(userController.createUser))
   .patch('/:id', supportMiddleware, wrapHandlerWithJSONResponse(userController.updateUser))
+  .patch('/:id/reset-password', supportMiddleware, wrapHandlerWithJSONResponse(userController.resetPassword))
   .delete('/:id', supportMiddleware, wrapHandlerWithJSONResponse(userController.deleteUser));
 
 module.exports = router;

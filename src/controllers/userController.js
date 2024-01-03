@@ -101,6 +101,23 @@ async function updateUser(req, res) {
   return foundUser;
 }
 
+async function resetPassword(req, res) {
+  const { id } = req.params;
+  const foundUser = await user.findOne({
+    where: { id },
+  });
+  if (!user) {
+    throw apiCode.NOT_FOUND;
+  }
+
+  const hash = bcrypt.hashSync('123456', config.CRYPT_SALT);
+  await foundUser.update({
+    password: hash,
+  });
+  await foundUser.reload();
+  return foundUser;
+}
+
 async function deleteUser(req, res) {
   const { id } = req.params;
   const foundUser = await user.findOne({
@@ -119,4 +136,5 @@ module.exports = {
   updateUser,
   deleteUser,
   getDetailUser,
+  resetPassword,
 };
