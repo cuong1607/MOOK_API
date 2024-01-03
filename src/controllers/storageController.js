@@ -7,7 +7,7 @@ const sequelize = require('@config/database');
 
 async function getAllStorage(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0 } = req.query;
+  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
   // if (search) {
   //   whereCondition.product_name = { [Op.substring]: search };
@@ -28,9 +28,15 @@ async function getAllStorage(req, res) {
     where: whereCondition,
     include: {
       model: product_price,
-      include: {
-        model: color,
-      },
+      include: [
+        {
+          model: color,
+        },
+        {
+          model: product,
+          where: search ? { name: { [Op.substring]: search } } : {},
+        },
+      ],
     },
     limit,
     offset,

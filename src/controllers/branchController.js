@@ -4,11 +4,18 @@ const { config, ROLE, apiCode, IS_ACTIVE, AppError } = require('@utils/constant'
 const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
+const utils = require('@utils/util');
 
 async function getAllBranch(req, res) {
   const { auth } = req;
   const { page = 1, limit = config.PAGING_LIMIT, offset = 0, status } = req.query;
-  const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
+  if (!from_date) from_date = 0;
+  if (!to_date) to_date = new Date(Date.now());
+  const performDate = await utils.convertDateToUTC(from_date, to_date);
+  const whereCondition = {
+    is_active: IS_ACTIVE.ACTIVE,
+    created_at: { [Op.and]: [{ [Op.lte]: performDate.toDate }, { [Op.gte]: performDate.fromDate }] },
+  };
   if (status) {
     whereCondition.status = status;
   }
