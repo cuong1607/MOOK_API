@@ -7,7 +7,10 @@ const { Op } = require('sequelize');
 
 async function getAllSize(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
+  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status } = req.query;
+  if (status) {
+    whereCondition.status = status;
+  }
   const { rows, count } = await size.findAndCountAll({
     where: { is_active: IS_ACTIVE.ACTIVE },
     limit,

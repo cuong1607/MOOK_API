@@ -59,6 +59,12 @@ async function getAllProduct(req, res) {
     whereCondition[Op.and].push({ id: { [Op.in]: productIDs } });
   }
   const orderQuery = [];
+
+  if (order == 'asc') {
+    orderQuery.push(['created_at', 'ASC']);
+  } else {
+    orderQuery.push(['created_at', 'DESC']);
+  }
   if (sort == 'asc') {
     orderQuery.push([
       sequelize.literal(`(SELECT
@@ -76,12 +82,6 @@ async function getAllProduct(req, res) {
       'DESC',
     ]);
   }
-  if (order == 'asc') {
-    orderQuery.push(['created_at', 'ASC']);
-  } else {
-    orderQuery.push(['created_at', 'DESC']);
-  }
-  console.log('orderQuery', orderQuery);
   const count = await product.count({ where: whereCondition });
   const { rows } = await product.findAndCountAll({
     where: whereCondition,
@@ -158,9 +158,7 @@ async function getDetailProduct(req, res) {
       {
         model: product_image,
         attributes: {
-          include: [
-            [sequelize.literal(`IF(LENGTH(path) > 0,CONCAT ('${utils.getFullUrl(path)}',path), path)`), 'path'],
-          ],
+          include: [[sequelize.literal(`IF(LENGTH(path) > 0,CONCAT ('${utils.getUrl()}',path), path)`), 'path']],
         },
       },
       {

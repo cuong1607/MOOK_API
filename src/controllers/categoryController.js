@@ -7,9 +7,16 @@ const { Op } = require('sequelize');
 
 async function getAllcategory(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
+  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status } = req.query;
+  const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
+  if (status) {
+    whereCondition.status = status;
+  }
+  if (search) {
+    whereCondition.name = { [Op.substring]: search };
+  }
   const { rows, count } = await category.findAndCountAll({
-    where: { is_active: IS_ACTIVE.ACTIVE },
+    where: whereCondition,
     limit,
     offset,
     order: [['id', 'DESC']],
@@ -56,9 +63,10 @@ async function updateCategory(req, res) {
     .keys({
       name: Joi.string().empty('').required(),
       code: Joi.string().empty('').required(),
+      status: Joi.number().empty(''),
     })
     .unknown(true);
-  const { name, code } = await schema.validateAsync(req.body);
+  const { name, code, status } = await schema.validateAsync(req.body);
   const { id } = req.params;
   const foundCategory = await category.findOne({
     where: { id },
@@ -75,6 +83,7 @@ async function updateCategory(req, res) {
   await foundCategory.update({
     name,
     code,
+    status,
     updated_at: new Date(),
   });
   await foundCategory.reload();

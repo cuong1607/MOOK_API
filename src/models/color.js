@@ -24,6 +24,11 @@ color.init(
       type: Sequelize.TEXT,
       allowNull: true,
     },
+    status: {
+      type: Sequelize.INTEGER,
+      allowNull: false,
+      defaultValue: IS_ACTIVE.ACTIVE,
+    },
     is_active: {
       type: Sequelize.INTEGER,
       allowNull: false,
