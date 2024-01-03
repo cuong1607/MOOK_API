@@ -10,6 +10,9 @@ const sequelize = require('@config/database');
 async function getAllUser(req, res) {
   const { auth } = req;
   const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
+  // if (search) {
+  //   whereCondition.name = { [Op.substring]: search };
+  // }
   const { rows, count } = await user.findAndCountAll({
     where: { is_active: IS_ACTIVE.ACTIVE, id: { [Op.ne]: auth.id } },
     attributes: {

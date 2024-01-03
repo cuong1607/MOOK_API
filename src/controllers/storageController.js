@@ -9,6 +9,9 @@ async function getAllStorage(req, res) {
   const { auth } = req;
   const { page = 1, limit = config.PAGING_LIMIT, offset = 0 } = req.query;
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
+  // if (search) {
+  //   whereCondition.product_name = { [Op.substring]: search };
+  // }
   const { rows, count } = await storage.findAndCountAll({
     attributes: {
       include: [

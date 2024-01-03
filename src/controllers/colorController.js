@@ -7,9 +7,27 @@ const { Op } = require('sequelize');
 
 async function getAllColor(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search } = req.query;
+  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status } = req.query;
+  // if (!from_date) from_date = 0;
+  // if (!to_date) to_date = new Date(Date.now());
+  // const performDate = await utils.convertDateToUTC(from_date, to_date);
+
+  const whereCondition = {
+    is_active: IS_ACTIVE.ACTIVE,
+    [Op.and]: [],
+  };
+
+  if (status) {
+    whereCondition.status = status;
+  }
+  // if (performDate) {
+  //   whereCondition.created_at = { [Op.and]: [{ [Op.lte]: performDate.toDate }, { [Op.gte]: performDate.fromDate }] };
+  // }
+  if (search) {
+    whereCondition.name = { [Op.substring]: search };
+  }
   const { rows, count } = await color.findAndCountAll({
-    where: { is_active: IS_ACTIVE.ACTIVE },
+    where: whereCondition,
     limit,
     offset,
     order: [['id', 'DESC']],
@@ -59,9 +77,10 @@ async function updateColor(req, res) {
       name: Joi.string().empty('').required(),
       code: Joi.string().empty('').required(),
       description: Joi.string().empty(''),
+      status: Joi.number().empty(''),
     })
     .unknown(true);
-  const { name, description, code } = await schema.validateAsync(req.body);
+  const { name, description, code, status } = await schema.validateAsync(req.body);
   const { id } = req.params;
   const foundColor = await color.findOne({
     where: { id },
@@ -79,6 +98,7 @@ async function updateColor(req, res) {
     name,
     code,
     description,
+    status,
     updated_at: new Date(),
   });
   await foundColor.reload();

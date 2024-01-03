@@ -29,12 +29,17 @@ const sequelize = require('@config/database');
 
 async function getAllOrder(req, res) {
   const { auth } = req;
-  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status } = req.query;
+  const { page = 1, limit = config.PAGING_LIMIT, offset = 0, search, status, payment_method } = req.query;
   const whereCondition = { is_active: IS_ACTIVE.ACTIVE };
   if (status) {
     whereCondition.status = status;
   }
-
+  if (payment_method) {
+    whereCondition.payment_method = payment_method;
+  }
+  // if (search) {
+  //   whereCondition.code = { [Op.substring]: search };
+  // }
   const { rows, count } = await order.findAndCountAll({
     where: whereCondition,
     include: [
@@ -44,6 +49,7 @@ async function getAllOrder(req, res) {
           'id',
           'full_name',
           'user_name',
+          'phone',
           [sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar'],
         ],
       },
@@ -165,6 +171,8 @@ async function getDetailOrder(req, res) {
           'id',
           'full_name',
           'user_name',
+          'phone',
+          'email',
           [sequelize.literal(`IF(LENGTH(avatar) > 0,CONCAT ('${utils.getUrl()}',avatar), avatar)`), 'avatar'],
         ],
       },
